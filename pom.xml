@@ -7,7 +7,7 @@
     <groupId>io.github.naveenb2004</groupId>
     <artifactId>socks5</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>SOCKS5</name>
     <description>SOCKS5 Proxy Library for Java Applications</description>
@@ -53,6 +53,11 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <modules>
+        <module>socks5-client</module>
+        <module>socks5-server</module>
+    </modules>
 
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
