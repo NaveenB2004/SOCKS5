@@ -1,6 +1,6 @@
-package io.github.naveenb2004.socks5.server;
+package io.github.naveenb2004.socks5.server.exception;
 
-public class SOCKS5ServerException extends RuntimeException {
+public final class SOCKS5ServerException extends RuntimeException {
     public SOCKS5ServerException() {
         super();
     }
@@ -18,10 +18,10 @@ public class SOCKS5ServerException extends RuntimeException {
         super(cause);
     }
 
-    protected SOCKS5ServerException(String message,
-                                    Throwable cause,
-                                    boolean enableSuppression,
-                                    boolean writableStackTrace) {
+    public SOCKS5ServerException(String message,
+                                 Throwable cause,
+                                 boolean enableSuppression,
+                                 boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

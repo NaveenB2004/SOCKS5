@@ -1,6 +1,8 @@
 package io.github.naveenb2004.socks5.server;
 
+import io.github.naveenb2004.socks5.server.auth.NoAuthentication;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
+import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,35 +11,119 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManager;
 import java.net.InetAddress;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
-public record SOCKS5ServerConfiguration(int socketPort,
-                                        int socketBacklog,
-                                        InetAddress socketBindAddress,
-                                        ThreadFactory threadFactory,
-                                        SOCKS5ServerAuth socks5ServerAuth,
-                                        boolean enableSsl,
-                                        String sslContextProtocol,
-                                        String sslContextProtocolProvider,
-                                        KeyManager[] keyManagers,
-                                        TrustManager[] trustManagers,
-                                        SecureRandom secureRandom,
-                                        SSLParameters sslParameters) {
+public final class SOCKS5ServerConfiguration {
+    private final int socketPort;
+    private final int socketBacklog;
+    private final InetAddress socketBindAddress;
+    private final ThreadFactory threadFactory;
+    private final int maximumClients;
+    private final List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths;
+    private final boolean sslEnabled;
+    private final String sslContextProtocol;
+    private final String sslContextProtocolProvider;
+    private final KeyManager[] keyManagers;
+    private final TrustManager[] trustManagers;
+    private final SecureRandom secureRandom;
+    private final SSLParameters sslParameters;
+
+    private SOCKS5ServerConfiguration(int socketPort,
+                                      int socketBacklog,
+                                      InetAddress socketBindAddress,
+                                      ThreadFactory threadFactory,
+                                      int maximumClients,
+                                      List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths,
+                                      boolean sslEnabled,
+                                      String sslContextProtocol,
+                                      String sslContextProtocolProvider,
+                                      KeyManager[] keyManagers,
+                                      TrustManager[] trustManagers,
+                                      SecureRandom secureRandom,
+                                      SSLParameters sslParameters) {
+        this.socketPort = socketPort;
+        this.socketBacklog = socketBacklog;
+        this.socketBindAddress = socketBindAddress;
+        this.threadFactory = threadFactory;
+        this.maximumClients = maximumClients;
+        this.socks5ServerAuths = socks5ServerAuths;
+        this.sslEnabled = sslEnabled;
+        this.sslContextProtocol = sslContextProtocol;
+        this.sslContextProtocolProvider = sslContextProtocolProvider;
+        this.keyManagers = keyManagers;
+        this.trustManagers = trustManagers;
+        this.secureRandom = secureRandom;
+        this.sslParameters = sslParameters;
+    }
+
+    public int getSocketPort() {
+        return socketPort;
+    }
+
+    public int getSocketBacklog() {
+        return socketBacklog;
+    }
+
+    public InetAddress getSocketBindAddress() {
+        return socketBindAddress;
+    }
+
+    public ThreadFactory getThreadFactory() {
+        return threadFactory;
+    }
+
+    public int getMaximumClients() {
+        return maximumClients;
+    }
+
+    public List<Class<? extends SOCKS5ServerAuth>> getSocks5ServerAuths() {
+        return socks5ServerAuths;
+    }
+
+    public boolean isSslEnabled() {
+        return sslEnabled;
+    }
+
+    public String getSslContextProtocol() {
+        return sslContextProtocol;
+    }
+
+    public String getSslContextProtocolProvider() {
+        return sslContextProtocolProvider;
+    }
+
+    public KeyManager[] getKeyManagers() {
+        return keyManagers;
+    }
+
+    public TrustManager[] getTrustManagers() {
+        return trustManagers;
+    }
+
+    public SecureRandom getSecureRandom() {
+        return secureRandom;
+    }
+
+    public SSLParameters getSslParameters() {
+        return sslParameters;
+    }
 
     public static SOCKS5ServerConfigurationBuilder builder() {
         return new SOCKS5ServerConfigurationBuilder();
     }
 
-    public static class SOCKS5ServerConfigurationBuilder {
+    public static final class SOCKS5ServerConfigurationBuilder {
         private static final Logger LOGGER = LoggerFactory.getLogger(SOCKS5ServerConfigurationBuilder.class);
 
-        private int socketPort;
-        private int socketBacklog;
+        private int socketPort = 1080;
+        private int socketBacklog = 50;
         private InetAddress socketBindAddress;
-        private ThreadFactory threadFactory;
-        private SOCKS5ServerAuth socks5ServerAuth;
-        private boolean enableSsl;
-        private String sslContextProtocol;
+        private ThreadFactory threadFactory = Thread.ofVirtual().factory();
+        private int maximumClients = 100;
+        private List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths = List.of(NoAuthentication.class);
+        private boolean sslEnabled;
+        private String sslContextProtocol = "TLSv1.3";
         private String sslContextProtocolProvider;
         private KeyManager[] keyManagers;
         private TrustManager[] trustManagers;
@@ -67,13 +153,18 @@ public record SOCKS5ServerConfiguration(int socketPort,
             return this;
         }
 
-        public SOCKS5ServerConfigurationBuilder socks5ServerAuth(SOCKS5ServerAuth socks5ServerAuth) {
-            this.socks5ServerAuth = socks5ServerAuth;
+        public SOCKS5ServerConfigurationBuilder maximumClients(int maximumClients) {
+            this.maximumClients = maximumClients;
             return this;
         }
 
-        public SOCKS5ServerConfigurationBuilder enableSsl(boolean enableSsl) {
-            this.enableSsl = enableSsl;
+        public SOCKS5ServerConfigurationBuilder socks5ServerAuth(List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths) {
+            this.socks5ServerAuths = socks5ServerAuths;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder sslEnabled(boolean sslEnabled) {
+            this.sslEnabled = sslEnabled;
             return this;
         }
 
@@ -107,14 +198,21 @@ public record SOCKS5ServerConfiguration(int socketPort,
             return this;
         }
 
+        private void validateAndSet() {
+            if (socketPort < 0 || socketPort > 65535) throw new SOCKS5ServerException("Port out of range: " + socketPort);
+            if (maximumClients < 1) throw new SOCKS5ServerException("Maximum client count must be >= 1");
+            if (sslEnabled && sslContextProtocol == null) throw new SOCKS5ServerException("SSL context protocol is null");
+        }
+
         public SOCKS5ServerConfiguration build() {
             LOGGER.atDebug().log("SOCKS5ServerConfiguration:");
             LOGGER.atDebug().setMessage("@ socketPort: {}").addArgument(socketPort).log();
             LOGGER.atDebug().setMessage("@ socketBacklog: {}").addArgument(socketBacklog).log();
             LOGGER.atDebug().setMessage("@ socketBindAddress: {}").addArgument(socketBindAddress).log();
             LOGGER.atDebug().setMessage("@ threadFactory: {}").addArgument(threadFactory).log();
-            LOGGER.atDebug().setMessage("@ socks5ServerAuth: {}").addArgument(socks5ServerAuth).log();
-            LOGGER.atDebug().setMessage("@ enableSsl: {}").addArgument(enableSsl).log();
+            LOGGER.atDebug().setMessage("@ maximumClients: {}").addArgument(maximumClients).log();
+            LOGGER.atDebug().setMessage("@ socks5ServerAuths: {}").addArgument(socks5ServerAuths).log();
+            LOGGER.atDebug().setMessage("@ sslEnabled: {}").addArgument(sslEnabled).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocol: {}").addArgument(sslContextProtocol).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocolProvider: {}").addArgument(sslContextProtocolProvider).log();
             LOGGER.atDebug().setMessage("@ keyManagers: {}").addArgument(keyManagers).log();
@@ -122,13 +220,15 @@ public record SOCKS5ServerConfiguration(int socketPort,
             LOGGER.atDebug().setMessage("@ secureRandom: {}").addArgument(secureRandom).log();
             LOGGER.atDebug().setMessage("@ sslParameters: {}").addArgument(sslParameters).log();
 
+            validateAndSet();
             return new SOCKS5ServerConfiguration(
                     socketPort,
                     socketBacklog,
                     socketBindAddress,
                     threadFactory,
-                    socks5ServerAuth,
-                    enableSsl,
+                    maximumClients,
+                    socks5ServerAuths,
+                    sslEnabled,
                     sslContextProtocol,
                     sslContextProtocolProvider,
                     keyManagers,
