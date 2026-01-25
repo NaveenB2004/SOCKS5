@@ -2,6 +2,7 @@ package io.github.naveenb2004.socks5.server;
 
 import io.github.naveenb2004.socks5.server.endpoint.SOCKS5ServerEndpoint;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.service.SocketInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,14 +11,16 @@ public final class SOCKS5Server {
 
     private final String serverIdentifier;
     private final SOCKS5ServerConfiguration configuration;
-    private final SOCKS5ServerEndpoint serverEndpoint;
+    private final SOCKS5ServerEndpoint endpoint;
+    private final SocketInitializer socketInitializer;
 
     private SOCKS5Server(String serverIdentifier,
                          SOCKS5ServerConfiguration configuration,
-                         SOCKS5ServerEndpoint serverEndpoint) {
+                         SOCKS5ServerEndpoint endpoint) {
         this.serverIdentifier = serverIdentifier;
         this.configuration = configuration;
-        this.serverEndpoint = serverEndpoint;
+        this.endpoint = endpoint;
+        this.socketInitializer = new SocketInitializer(endpoint, configuration);
     }
 
     public String getServerIdentifier() {
@@ -28,18 +31,22 @@ public final class SOCKS5Server {
         return configuration;
     }
 
-    public SOCKS5ServerEndpoint getServerEndpoint() {
-        return serverEndpoint;
+    public SOCKS5ServerEndpoint getEndpoint() {
+        return endpoint;
     }
 
     public void init() {
         LOGGER.atInfo().setMessage("Initializing SOCKS5Server ({})").addArgument(serverIdentifier).log();
+        socketInitializer.init();
+    }
 
+    public void destroy(long gracefulPeriod) {
+        LOGGER.atInfo().setMessage("Destroying SOCKS5Server ({})").addArgument(serverIdentifier).log();
+        socketInitializer.destroy(gracefulPeriod);
     }
 
     public void destroy() {
-        LOGGER.atInfo().setMessage("Destroying SOCKS5Server ({})").addArgument(serverIdentifier).log();
-
+        destroy(0);
     }
 
     public static SOCKS5ServerBuilder builder() {

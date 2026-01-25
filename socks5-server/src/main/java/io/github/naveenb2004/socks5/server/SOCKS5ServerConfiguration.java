@@ -1,6 +1,6 @@
 package io.github.naveenb2004.socks5.server;
 
-import io.github.naveenb2004.socks5.server.auth.NoAuthentication;
+import io.github.naveenb2004.socks5.server.auth.method.NoAuthentication;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ public final class SOCKS5ServerConfiguration {
     private final InetAddress socketBindAddress;
     private final ThreadFactory threadFactory;
     private final int maximumClients;
-    private final List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths;
+    private final List<? extends SOCKS5ServerAuth> socks5ServerAuths;
     private final boolean sslEnabled;
     private final String sslContextProtocol;
     private final String sslContextProtocolProvider;
@@ -34,7 +34,7 @@ public final class SOCKS5ServerConfiguration {
                                       InetAddress socketBindAddress,
                                       ThreadFactory threadFactory,
                                       int maximumClients,
-                                      List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths,
+                                      List<? extends SOCKS5ServerAuth> socks5ServerAuths,
                                       boolean sslEnabled,
                                       String sslContextProtocol,
                                       String sslContextProtocolProvider,
@@ -77,7 +77,7 @@ public final class SOCKS5ServerConfiguration {
         return maximumClients;
     }
 
-    public List<Class<? extends SOCKS5ServerAuth>> getSocks5ServerAuths() {
+    public List<? extends SOCKS5ServerAuth> getSocks5ServerAuths() {
         return socks5ServerAuths;
     }
 
@@ -121,7 +121,7 @@ public final class SOCKS5ServerConfiguration {
         private InetAddress socketBindAddress;
         private ThreadFactory threadFactory = Thread.ofVirtual().factory();
         private int maximumClients = 100;
-        private List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths = List.of(NoAuthentication.class);
+        private List<? extends SOCKS5ServerAuth> socks5ServerAuths = List.of(new NoAuthentication());
         private boolean sslEnabled;
         private String sslContextProtocol = "TLSv1.3";
         private String sslContextProtocolProvider;
@@ -158,7 +158,7 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
-        public SOCKS5ServerConfigurationBuilder socks5ServerAuth(List<Class<? extends SOCKS5ServerAuth>> socks5ServerAuths) {
+        public SOCKS5ServerConfigurationBuilder socks5ServerAuth(List<? extends SOCKS5ServerAuth> socks5ServerAuths) {
             this.socks5ServerAuths = socks5ServerAuths;
             return this;
         }

@@ -21,4 +21,8 @@ public final class ProtocolHandler {
     public boolean handle() {
         return false;
     }
+
+    private void methodSelectionPhase() {
+
+    }
 }
