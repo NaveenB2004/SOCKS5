@@ -40,17 +40,16 @@ public final class SocketInitializer {
         if (initialized) throw new SOCKS5ServerException("Already initialized");
         serverSocket = createServerSocket(configuration);
         executorService = Executors.newFixedThreadPool(configuration.getMaximumClients(), configuration.getThreadFactory());
-        serverThread = configuration.getThreadFactory().newThread(() -> {
+        serverThread = Thread.ofPlatform().start(() -> {
             while (!serverSocket.isClosed()) {
                 try {
                     Socket socket = serverSocket.accept();
                     executorService.execute(new ProtocolHandler(socket, configuration));
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new SOCKS5ServerException(e);
                 }
             }
         });
-        serverThread.start();
         initialized = true;
     }
 
@@ -80,22 +79,21 @@ public final class SocketInitializer {
                         SSLContext.getInstance(configuration.getSslContextProtocol(), configuration.getSslContextProtocolProvider());
                 sslContext.init(configuration.getKeyManagers(), configuration.getTrustManagers(), configuration.getSecureRandom());
                 SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
-                try (SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(
+                SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(
                         configuration.getSocketPort(),
                         configuration.getSocketBacklog(),
-                        configuration.getSocketBindAddress())) {
+                        configuration.getSocketBindAddress());
                     serverSocket.setSSLParameters(configuration.getSslParameters());
                     return serverSocket;
-                }
             } catch (NoSuchAlgorithmException | KeyManagementException | NoSuchProviderException | IOException e) {
                 throw new SOCKS5ServerException(e);
             }
         } else {
-            try (ServerSocket serverSocket = new ServerSocket(
-                    configuration.getSocketPort(),
-                    configuration.getSocketBacklog(),
-                    configuration.getSocketBindAddress())) {
-                return serverSocket;
+            try {
+                return new ServerSocket(
+                        configuration.getSocketPort(),
+                        configuration.getSocketBacklog(),
+                        configuration.getSocketBindAddress());
             } catch (IOException e) {
                 throw new SOCKS5ServerException(e);
             }

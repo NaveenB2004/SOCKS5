@@ -23,6 +23,7 @@ public final class SOCKS5ServerConfiguration {
     private final List<? extends SOCKS5ServerAuth> socks5ServerAuths;
     private final SOCKS5ServerRuleset socks5ServerRuleset;
     private final boolean sslEnabled;
+    private final boolean sslEnabledForClients;
     private final String sslContextProtocol;
     private final String sslContextProtocolProvider;
     private final KeyManager[] keyManagers;
@@ -38,6 +39,7 @@ public final class SOCKS5ServerConfiguration {
                                       List<? extends SOCKS5ServerAuth> socks5ServerAuths,
                                       SOCKS5ServerRuleset socks5ServerRuleset,
                                       boolean sslEnabled,
+                                      boolean sslEnabledForClients,
                                       String sslContextProtocol,
                                       String sslContextProtocolProvider,
                                       KeyManager[] keyManagers,
@@ -52,6 +54,7 @@ public final class SOCKS5ServerConfiguration {
         this.socks5ServerAuths = socks5ServerAuths;
         this.socks5ServerRuleset = socks5ServerRuleset;
         this.sslEnabled = sslEnabled;
+        this.sslEnabledForClients = sslEnabledForClients;
         this.sslContextProtocol = sslContextProtocol;
         this.sslContextProtocolProvider = sslContextProtocolProvider;
         this.keyManagers = keyManagers;
@@ -90,6 +93,10 @@ public final class SOCKS5ServerConfiguration {
 
     public boolean isSslEnabled() {
         return sslEnabled;
+    }
+
+    public boolean isSslEnabledForClients() {
+        return sslEnabledForClients;
     }
 
     public String getSslContextProtocol() {
@@ -131,6 +138,7 @@ public final class SOCKS5ServerConfiguration {
         private List<? extends SOCKS5ServerAuth> socks5ServerAuths = List.of(new NoAuthentication());
         private SOCKS5ServerRuleset socks5ServerRuleset;
         private boolean sslEnabled;
+        private boolean sslEnabledForClients;
         private String sslContextProtocol = "TLSv1.3";
         private String sslContextProtocolProvider;
         private KeyManager[] keyManagers;
@@ -184,6 +192,11 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
+        public SOCKS5ServerConfigurationBuilder sslEnabledForClients(boolean sslEnabled) {
+            this.sslEnabledForClients = sslEnabled;
+            return this;
+        }
+
         public SOCKS5ServerConfigurationBuilder sslContextProtocol(String sslContextProtocol) {
             if (sslContextProtocol == null) throw new SOCKS5ServerException("SSL context protocol is null");
             this.sslContextProtocol = sslContextProtocol;
@@ -225,6 +238,7 @@ public final class SOCKS5ServerConfiguration {
             LOGGER.atDebug().setMessage("@ socks5ServerAuths: {}").addArgument(socks5ServerAuths).log();
             LOGGER.atDebug().setMessage("@ socks5ServerRuleset: {}").addArgument(socks5ServerRuleset).log();
             LOGGER.atDebug().setMessage("@ sslEnabled: {}").addArgument(sslEnabled).log();
+            LOGGER.atDebug().setMessage("@ sslEnabledForClients: {}").addArgument(sslEnabledForClients).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocol: {}").addArgument(sslContextProtocol).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocolProvider: {}").addArgument(sslContextProtocolProvider).log();
             LOGGER.atDebug().setMessage("@ keyManagers: {}").addArgument(keyManagers).log();
@@ -241,6 +255,7 @@ public final class SOCKS5ServerConfiguration {
                     socks5ServerAuths,
                     socks5ServerRuleset,
                     sslEnabled,
+                    sslEnabledForClients,
                     sslContextProtocol,
                     sslContextProtocolProvider,
                     keyManagers,

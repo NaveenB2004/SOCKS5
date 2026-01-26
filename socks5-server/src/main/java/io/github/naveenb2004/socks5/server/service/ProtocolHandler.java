@@ -1,9 +1,11 @@
 package io.github.naveenb2004.socks5.server.service;
 
+import io.github.naveenb2004.socks5.base.CMD;
 import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
 import io.github.naveenb2004.socks5.server.SOCKS5ServerException;
 import io.github.naveenb2004.socks5.base.util.ReqRsp;
+import io.github.naveenb2004.socks5.server.service.reqHandler.ConnectReqHandler;
 import io.github.naveenb2004.socks5.server.service.util.RulesetEnforcer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ public final class ProtocolHandler implements Runnable {
 
     private InputStream inputStream;
     private OutputStream outputStream;
+    private ReqRsp clientRequest;
 
     public ProtocolHandler(Socket socket,
                            SOCKS5ServerConfiguration configuration) {
@@ -37,10 +40,14 @@ public final class ProtocolHandler implements Runnable {
             outputStream = socket.getOutputStream();
             methodSelectionPhase();
             clientRequestPhase();
-        } catch (IOException e) {
+            clientRequestInitPhase();
+        } catch (Exception e) {
+            try {
+                if (!socket.isClosed()) socket.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             throw new SOCKS5ServerException(e);
-        } catch (ServerServiceException e) {
-
         }
     }
 
@@ -126,11 +133,34 @@ public final class ProtocolHandler implements Runnable {
             throw new ServerServiceException("Invalid DST.PORT");
         }
         clientRequestBuilder.port(dstPort);
+        clientRequest = clientRequestBuilder.build();
 
-        RulesetEnforcer.builder()
-                .ruleset(configuration.getSocks5ServerRuleset())
-                .outputStream(outputStream)
-                .clientRequest(clientRequestBuilder.build())
-                .build().enforce();
+        if (configuration.getSocks5ServerRuleset() != null) {
+            RulesetEnforcer.builder()
+                    .ruleset(configuration.getSocks5ServerRuleset())
+                    .outputStream(outputStream)
+                    .clientRequest(clientRequest)
+                    .build().enforce();
+        }
+    }
+
+    private void clientRequestInitPhase() {
+        switch ((CMD) clientRequest.getReqRspField()) {
+            case CONNECT -> {
+                ConnectReqHandler connectReqHandler;
+                try {
+                    connectReqHandler = new ConnectReqHandler(
+                            socket,
+                            clientRequest.getAddr(),
+                            clientRequest.getPort(),
+                            configuration);
+                    connectReqHandler.handle();
+                } catch (Exception e) {
+
+                }
+            }
+            case BIND -> {}
+            case UDP_ASSOCIATE -> {}
+        }
     }
 }

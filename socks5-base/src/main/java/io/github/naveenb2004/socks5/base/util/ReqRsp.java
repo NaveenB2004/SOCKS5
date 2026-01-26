@@ -139,7 +139,7 @@ public final class ReqRsp {
         public ClientRequestBuilder port(byte[] port) {
             if (port == null) throw new IllegalArgumentException("dstPort must not be null");
             if (port.length != 2) throw new IllegalArgumentException("port length must be 2");
-            return port((port[0] << 8) | port[1]);
+            return port(((port[0] & 0xFF) << 8) | (port[1] & 0xFF));
         }
 
         public ReqRsp build() {
