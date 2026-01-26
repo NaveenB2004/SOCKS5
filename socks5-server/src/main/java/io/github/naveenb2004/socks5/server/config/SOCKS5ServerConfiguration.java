@@ -1,4 +1,4 @@
-package io.github.naveenb2004.socks5.server;
+package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.server.auth.method.NoAuthentication;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
@@ -21,6 +21,7 @@ public final class SOCKS5ServerConfiguration {
     private final ThreadFactory threadFactory;
     private final int maximumClients;
     private final List<? extends SOCKS5ServerAuth> socks5ServerAuths;
+    private final SOCKS5ServerRuleset socks5ServerRuleset;
     private final boolean sslEnabled;
     private final String sslContextProtocol;
     private final String sslContextProtocolProvider;
@@ -35,6 +36,7 @@ public final class SOCKS5ServerConfiguration {
                                       ThreadFactory threadFactory,
                                       int maximumClients,
                                       List<? extends SOCKS5ServerAuth> socks5ServerAuths,
+                                      SOCKS5ServerRuleset socks5ServerRuleset,
                                       boolean sslEnabled,
                                       String sslContextProtocol,
                                       String sslContextProtocolProvider,
@@ -48,6 +50,7 @@ public final class SOCKS5ServerConfiguration {
         this.threadFactory = threadFactory;
         this.maximumClients = maximumClients;
         this.socks5ServerAuths = socks5ServerAuths;
+        this.socks5ServerRuleset = socks5ServerRuleset;
         this.sslEnabled = sslEnabled;
         this.sslContextProtocol = sslContextProtocol;
         this.sslContextProtocolProvider = sslContextProtocolProvider;
@@ -79,6 +82,10 @@ public final class SOCKS5ServerConfiguration {
 
     public List<? extends SOCKS5ServerAuth> getSocks5ServerAuths() {
         return socks5ServerAuths;
+    }
+
+    public SOCKS5ServerRuleset getSocks5ServerRuleset() {
+        return socks5ServerRuleset;
     }
 
     public boolean isSslEnabled() {
@@ -122,6 +129,7 @@ public final class SOCKS5ServerConfiguration {
         private ThreadFactory threadFactory = Thread.ofVirtual().factory();
         private int maximumClients = 100;
         private List<? extends SOCKS5ServerAuth> socks5ServerAuths = List.of(new NoAuthentication());
+        private SOCKS5ServerRuleset socks5ServerRuleset;
         private boolean sslEnabled;
         private String sslContextProtocol = "TLSv1.3";
         private String sslContextProtocolProvider;
@@ -163,6 +171,11 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
+        public SOCKS5ServerConfigurationBuilder socks5ServerRuleset(SOCKS5ServerRuleset socks5ServerRuleset) {
+            this.socks5ServerRuleset = socks5ServerRuleset;
+            return this;
+        }
+
         public SOCKS5ServerConfigurationBuilder sslEnabled(boolean sslEnabled) {
             this.sslEnabled = sslEnabled;
             return this;
@@ -201,6 +214,7 @@ public final class SOCKS5ServerConfiguration {
         private void validateAndSet() {
             if (socketPort < 0 || socketPort > 65535) throw new SOCKS5ServerException("Port out of range: " + socketPort);
             if (maximumClients < 1) throw new SOCKS5ServerException("Maximum client count must be >= 1");
+            if (socks5ServerAuths == null) throw new SOCKS5ServerException("Socks5ServerAuth array is null");
             if (sslEnabled && sslContextProtocol == null) throw new SOCKS5ServerException("SSL context protocol is null");
         }
 
@@ -212,6 +226,7 @@ public final class SOCKS5ServerConfiguration {
             LOGGER.atDebug().setMessage("@ threadFactory: {}").addArgument(threadFactory).log();
             LOGGER.atDebug().setMessage("@ maximumClients: {}").addArgument(maximumClients).log();
             LOGGER.atDebug().setMessage("@ socks5ServerAuths: {}").addArgument(socks5ServerAuths).log();
+            LOGGER.atDebug().setMessage("@ socks5ServerRuleset: {}").addArgument(socks5ServerRuleset).log();
             LOGGER.atDebug().setMessage("@ sslEnabled: {}").addArgument(sslEnabled).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocol: {}").addArgument(sslContextProtocol).log();
             LOGGER.atDebug().setMessage("@ sslContextProtocolProvider: {}").addArgument(sslContextProtocolProvider).log();
@@ -228,6 +243,7 @@ public final class SOCKS5ServerConfiguration {
                     threadFactory,
                     maximumClients,
                     socks5ServerAuths,
+                    socks5ServerRuleset,
                     sslEnabled,
                     sslContextProtocol,
                     sslContextProtocolProvider,

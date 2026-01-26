@@ -13,4 +13,12 @@
     <name>SOCKS5 Server</name>
     <artifactId>socks5-server</artifactId>
     <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.naveenb2004</groupId>
+            <artifactId>socks5-base</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

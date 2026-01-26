@@ -17,12 +17,12 @@ public record NoAuthentication() implements SOCKS5ServerAuth {
     }
 
     @Override
-    public InputStream getUnwrapperServerInputStream(InputStream inputStream) {
+    public InputStream getDecapsulationServerInputStream(InputStream inputStream) {
         return inputStream;
     }
 
     @Override
-    public OutputStream getWrapperServerOutputStream(OutputStream outputStream) {
+    public OutputStream getEncapsulationServerOutputStream(OutputStream outputStream) {
         return outputStream;
     }
 }

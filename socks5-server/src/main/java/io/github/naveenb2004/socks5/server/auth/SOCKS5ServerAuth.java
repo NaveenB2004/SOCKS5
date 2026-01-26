@@ -9,7 +9,7 @@ public interface SOCKS5ServerAuth {
     void authenticateAsServer(InputStream inputStream,
                               OutputStream outputStream);
 
-    InputStream getUnwrapperServerInputStream(InputStream inputStream);
+    InputStream getDecapsulationServerInputStream(InputStream inputStream);
 
-    OutputStream getWrapperServerOutputStream(OutputStream outputStream);
+    OutputStream getEncapsulationServerOutputStream(OutputStream outputStream);
 }

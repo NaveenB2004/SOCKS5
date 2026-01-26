@@ -1,5 +1,6 @@
 package io.github.naveenb2004.socks5.server;
 
+import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
 import io.github.naveenb2004.socks5.server.endpoint.SOCKS5ServerEndpoint;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import io.github.naveenb2004.socks5.server.service.SocketInitializer;

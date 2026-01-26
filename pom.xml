@@ -55,6 +55,7 @@
     </repositories>
 
     <modules>
+        <module>socks5-base</module>
         <module>socks5-client</module>
         <module>socks5-server</module>
     </modules>
