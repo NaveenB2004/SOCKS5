@@ -1,7 +1,7 @@
 package io.github.naveenb2004.socks5.server.auth.method;
 
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.SOCKS5ServerException;
 
 import java.io.IOException;
 import java.io.InputStream;

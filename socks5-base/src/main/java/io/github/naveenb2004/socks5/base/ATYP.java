@@ -14,4 +14,13 @@ public enum ATYP {
     public int getValue() {
         return value;
     }
+
+    public static ATYP valueOf(int value) {
+        for (ATYP atyp : ATYP.values()) {
+            if (atyp.getValue() == value) {
+                return atyp;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for value " + value);
+    }
 }

@@ -1,6 +1,8 @@
 package io.github.naveenb2004.socks5.base;
 
-public enum REP {
+import io.github.naveenb2004.socks5.base.util.ReqRspField;
+
+public enum REP implements ReqRspField {
     SUCCEEDED(0x00),
     GENERAL_SOCKS_SERVER_FAILURE(0x01),
     CONNECTION_NOT_ALLOWED_BY_RULESET(0x02),
@@ -19,5 +21,14 @@ public enum REP {
 
     public int getValue() {
         return value;
+    }
+
+    public static REP valueOf(int value) {
+        for (REP rep : REP.values()) {
+            if (rep.value == value) {
+                return rep;
+            }
+        }
+        throw new IllegalArgumentException("Unknown REP value: " + value);
     }
 }

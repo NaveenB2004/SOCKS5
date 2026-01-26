@@ -2,7 +2,7 @@ package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.server.auth.method.NoAuthentication;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.SOCKS5ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,6 +142,7 @@ public final class SOCKS5ServerConfiguration {
         }
 
         public SOCKS5ServerConfigurationBuilder socketPort(int socketPort) {
+            if (socketPort < 0 || socketPort > 65535) throw new SOCKS5ServerException("Port out of range (should be in range 0-65535)");
             this.socketPort = socketPort;
             return this;
         }
@@ -162,11 +163,13 @@ public final class SOCKS5ServerConfiguration {
         }
 
         public SOCKS5ServerConfigurationBuilder maximumClients(int maximumClients) {
+            if (maximumClients < 1) throw new SOCKS5ServerException("Maximum client count must be >= 1");
             this.maximumClients = maximumClients;
             return this;
         }
 
         public SOCKS5ServerConfigurationBuilder socks5ServerAuth(List<? extends SOCKS5ServerAuth> socks5ServerAuths) {
+            if (socks5ServerAuths == null) throw new SOCKS5ServerException("Socks5ServerAuth array is null");
             this.socks5ServerAuths = socks5ServerAuths;
             return this;
         }
@@ -182,6 +185,7 @@ public final class SOCKS5ServerConfiguration {
         }
 
         public SOCKS5ServerConfigurationBuilder sslContextProtocol(String sslContextProtocol) {
+            if (sslContextProtocol == null) throw new SOCKS5ServerException("SSL context protocol is null");
             this.sslContextProtocol = sslContextProtocol;
             return this;
         }
@@ -211,13 +215,6 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
-        private void validateAndSet() {
-            if (socketPort < 0 || socketPort > 65535) throw new SOCKS5ServerException("Port out of range: " + socketPort);
-            if (maximumClients < 1) throw new SOCKS5ServerException("Maximum client count must be >= 1");
-            if (socks5ServerAuths == null) throw new SOCKS5ServerException("Socks5ServerAuth array is null");
-            if (sslEnabled && sslContextProtocol == null) throw new SOCKS5ServerException("SSL context protocol is null");
-        }
-
         public SOCKS5ServerConfiguration build() {
             LOGGER.atDebug().log("SOCKS5ServerConfiguration:");
             LOGGER.atDebug().setMessage("@ socketPort: {}").addArgument(socketPort).log();
@@ -235,7 +232,6 @@ public final class SOCKS5ServerConfiguration {
             LOGGER.atDebug().setMessage("@ secureRandom: {}").addArgument(secureRandom).log();
             LOGGER.atDebug().setMessage("@ sslParameters: {}").addArgument(sslParameters).log();
 
-            validateAndSet();
             return new SOCKS5ServerConfiguration(
                     socketPort,
                     socketBacklog,

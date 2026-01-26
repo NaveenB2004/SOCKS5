@@ -1,13 +1,12 @@
 package io.github.naveenb2004.socks5.server.service;
 
 import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
-import io.github.naveenb2004.socks5.server.endpoint.SOCKS5ClientConnection;
-import io.github.naveenb2004.socks5.server.endpoint.SOCKS5ServerEndpoint;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.SOCKS5ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -22,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 public final class SocketInitializer {
     private static final Logger logger = LoggerFactory.getLogger(SocketInitializer.class);
 
-    private final SOCKS5ServerEndpoint endpoint;
     private final SOCKS5ServerConfiguration configuration;
 
     private Thread serverThread;
@@ -30,9 +28,7 @@ public final class SocketInitializer {
     private ExecutorService executorService;
     private boolean initialized;
 
-    public SocketInitializer(SOCKS5ServerEndpoint endpoint,
-                             SOCKS5ServerConfiguration configuration) {
-        this.endpoint = endpoint;
+    public SocketInitializer(SOCKS5ServerConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -43,18 +39,12 @@ public final class SocketInitializer {
     public synchronized void init() throws SOCKS5ServerException {
         if (initialized) throw new SOCKS5ServerException("Already initialized");
         serverSocket = createServerSocket(configuration);
-        endpoint.onServerInitializing(serverSocket);
         executorService = Executors.newFixedThreadPool(configuration.getMaximumClients(), configuration.getThreadFactory());
         serverThread = configuration.getThreadFactory().newThread(() -> {
             while (!serverSocket.isClosed()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    executorService.execute(() -> {
-                        ProtocolHandler protocolHandler = new ProtocolHandler(socket, configuration);
-                        if (!protocolHandler.handle()) return;
-                        SOCKS5ClientConnection client = new SOCKS5ClientConnection(socket);
-                        endpoint.onClientConnected(client);
-                    });
+                    executorService.execute(new ProtocolHandler(socket, configuration));
                 } catch (IOException e) {
                     throw new SOCKS5ServerException(e);
                 }
@@ -90,10 +80,11 @@ public final class SocketInitializer {
                         SSLContext.getInstance(configuration.getSslContextProtocol(), configuration.getSslContextProtocolProvider());
                 sslContext.init(configuration.getKeyManagers(), configuration.getTrustManagers(), configuration.getSecureRandom());
                 SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
-                try (ServerSocket serverSocket = sslServerSocketFactory.createServerSocket(
+                try (SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(
                         configuration.getSocketPort(),
                         configuration.getSocketBacklog(),
                         configuration.getSocketBindAddress())) {
+                    serverSocket.setSSLParameters(configuration.getSslParameters());
                     return serverSocket;
                 }
             } catch (NoSuchAlgorithmException | KeyManagementException | NoSuchProviderException | IOException e) {

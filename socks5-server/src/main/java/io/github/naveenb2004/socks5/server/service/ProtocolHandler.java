@@ -2,7 +2,9 @@ package io.github.naveenb2004.socks5.server.service;
 
 import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
 import io.github.naveenb2004.socks5.server.auth.SOCKS5ServerAuth;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.base.util.ReqRsp;
+import io.github.naveenb2004.socks5.server.service.util.RulesetEnforcer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,7 @@ import java.net.Socket;
 import java.util.Set;
 import java.util.TreeSet;
 
-public final class ProtocolHandler {
+public final class ProtocolHandler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProtocolHandler.class);
 
     private final Socket socket;
@@ -28,29 +30,30 @@ public final class ProtocolHandler {
         this.configuration = configuration;
     }
 
-    public boolean handle() {
+    @Override
+    public void run() {
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-            if (!methodSelectionPhase()) return false;
-            if (!clientRequestPhase()) return false;
+            methodSelectionPhase();
+            clientRequestPhase();
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
+        } catch (ServerServiceException e) {
+
         }
-        return false;
     }
 
-    private boolean verifyVersion() throws IOException {
+    private void verifySocksVersion() throws IOException {
         int ver = inputStream.read();
         if (ver != 0x05) {
             socket.close();
-            return false;
+            throw new ServerServiceException("SOCKS version mismatch");
         }
-        return true;
     }
 
-    private boolean methodSelectionPhase() throws IOException {
-        if (!verifyVersion()) return false;
+    private void methodSelectionPhase() throws IOException {
+        verifySocksVersion();
 
         int nmethods = inputStream.read();
         Set<Byte> receivedMethods = new TreeSet<>();
@@ -71,7 +74,7 @@ public final class ProtocolHandler {
             outputStream.write(0xff);
             outputStream.flush();
             socket.close();
-            return false;
+            throw new ServerServiceException("No acceptable auth method found");
         }
 
         outputStream.write(acceptedMethod.getMethodId());
@@ -79,47 +82,55 @@ public final class ProtocolHandler {
 
         // method-dependent sub-negotiation
         acceptedMethod.authenticateAsServer(inputStream, outputStream);
-        // method-dependent encapsulation
+        // method-dependent encapsulation/decapsulation
         inputStream = acceptedMethod.getDecapsulationServerInputStream(inputStream);
         outputStream = acceptedMethod.getEncapsulationServerOutputStream(outputStream);
-        return true;
     }
 
-    private boolean clientRequestPhase() throws IOException {
-        if (!verifyVersion()) return false;
+    private void clientRequestPhase() throws IOException {
+        verifySocksVersion();
 
         int cmd, rsv, atyp;
         byte[] dstAddr, dstPort;
+        ReqRsp.ClientRequestBuilder clientRequestBuilder = ReqRsp.builder();
 
         cmd = inputStream.read();
+        clientRequestBuilder.cmd(cmd);
+
         rsv = inputStream.read();
+        if (rsv != 0x00) {
+            socket.close();
+            throw new ServerServiceException("Invalid RSV");
+        }
+
         atyp = inputStream.read();
+        clientRequestBuilder.atyp(atyp);
+
         switch (atyp) {
             case 0x01 -> dstAddr = new byte[4];
             case 0x03 -> dstAddr = new byte[inputStream.read()];
             case 0x04 -> dstAddr = new byte[16];
-            default -> {
-                socket.close();
-                return false;
-            }
+            default -> throw new IllegalStateException("Unexpected value: " + atyp);
         }
         int c = inputStream.read(dstAddr);
         if (c != dstAddr.length) {
             socket.close();
-            return false;
+            throw new ServerServiceException("Invalid DST.ADDR");
         }
+        clientRequestBuilder.addr(dstAddr);
 
         dstPort = new byte[2];
         c = inputStream.read(dstPort);
         if (c != dstPort.length) {
             socket.close();
-            return false;
+            throw new ServerServiceException("Invalid DST.PORT");
         }
+        clientRequestBuilder.port(dstPort);
 
-//        try {
-//
-//        }
-
-        return true;
+        RulesetEnforcer.builder()
+                .ruleset(configuration.getSocks5ServerRuleset())
+                .outputStream(outputStream)
+                .clientRequest(clientRequestBuilder.build())
+                .build().enforce();
     }
 }
