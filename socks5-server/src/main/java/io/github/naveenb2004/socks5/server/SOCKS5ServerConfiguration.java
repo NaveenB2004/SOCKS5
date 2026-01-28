@@ -1,0 +1,112 @@
+package io.github.naveenb2004.socks5.server;
+
+import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.method.SOCKS5Methods;
+import io.github.naveenb2004.socks5.base.method.impl.NoAuthentication;
+import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+
+import java.net.InetAddress;
+import java.util.concurrent.ThreadFactory;
+
+@Immutable
+public final class SOCKS5ServerConfiguration {
+    private final int port;
+    private final int backlog;
+    private final InetAddress bindAddress;
+    private final int maxClients;
+    private final ThreadFactory clientThreadFactory;
+    private final SOCKS5Methods socks5Methods;
+
+    private SOCKS5ServerConfiguration(int port,
+                                      int backlog,
+                                      InetAddress bindAddress,
+                                      int maxClients,
+                                      ThreadFactory clientThreadFactory,
+                                      SOCKS5Methods socks5Methods) {
+        this.port = port;
+        this.backlog = backlog;
+        this.bindAddress = bindAddress;
+        this.maxClients = maxClients;
+        this.clientThreadFactory = clientThreadFactory;
+        this.socks5Methods = socks5Methods;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public int getBacklog() {
+        return backlog;
+    }
+
+    public InetAddress getBindAddress() {
+        return bindAddress;
+    }
+
+    public int getMaxClients() {
+        return maxClients;
+    }
+
+    public ThreadFactory getClientThreadFactory() {
+        return clientThreadFactory;
+    }
+
+    public SOCKS5Methods getSocks5Methods() {
+        return socks5Methods;
+    }
+
+    public static SOCKS5ServerConfigurationBuilder builder() {
+        return new SOCKS5ServerConfigurationBuilder();
+    }
+
+    public static final class SOCKS5ServerConfigurationBuilder {
+        private int port;
+        private int backlog;
+        private InetAddress bindAddress;
+        private int maxClients = 100;
+        private ThreadFactory clientThreadFactory = Thread.ofVirtual().factory();
+        private SOCKS5Methods socks5Methods;
+
+        private SOCKS5ServerConfigurationBuilder() {
+        }
+
+        public SOCKS5ServerConfigurationBuilder port(int port) throws SOCKS5ServerException {
+            if (port < 0 || port > 65535) throw new SOCKS5ServerException("Port must be between 0 and 65535");
+            this.port = port;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder backlog(int backlog) {
+            this.backlog = backlog;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder bindAddress(InetAddress bindAddress) {
+            this.bindAddress = bindAddress;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder maxClients(int maxClients) throws SOCKS5ServerException {
+            if (maxClients < 1) throw new SOCKS5ServerException("Max clients must be greater than 0");
+            this.maxClients = maxClients;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder threadFactory(ThreadFactory clientThreadFactory) throws SOCKS5ServerException {
+            if (clientThreadFactory == null) throw new SOCKS5ServerException("Client thread factory cannot be null");
+            this.clientThreadFactory = clientThreadFactory;
+            return this;
+        }
+
+        public SOCKS5ServerConfigurationBuilder addSocks5MethodImpl(SOCKS5Methods socks5Methods) throws SOCKS5ServerException {
+            if (socks5Methods == null) throw new SOCKS5ServerException("SOCKS5 methods cannot be null");
+            this.socks5Methods = socks5Methods;
+            return this;
+        }
+
+        public SOCKS5ServerConfiguration build() {
+            if (socks5Methods == null) socks5Methods = SOCKS5Methods.builder().addMethod(new NoAuthentication()).build();
+            return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients, clientThreadFactory, socks5Methods);
+        }
+    }
+}

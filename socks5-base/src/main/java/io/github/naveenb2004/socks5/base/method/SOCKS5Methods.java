@@ -1,33 +1,35 @@
 package io.github.naveenb2004.socks5.base.method;
 
+import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+@Immutable
 public final class SOCKS5Methods {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOCKS5Methods.class);
 
-    private final Map<Byte, SOCKS5MethodImpl> methodImpls;
+    private final List<? super SOCKS5MethodImpl> methodImpls;
 
-    private SOCKS5Methods(List<SOCKS5MethodImpl> methods) {
-        methodImpls = new HashMap<>(methods.size(), 1);
-        for (SOCKS5MethodImpl method : methods) {
-            methodImpls.put(method.getMethodId(), method);
-            LOGGER.atDebug().log("SOCKS5 method added: {}", method.getMethodId());
-        }
+    private SOCKS5Methods(SequencedSet<? super SOCKS5MethodImpl> methods) {
+        methodImpls = new ArrayList<>(methods);
     }
 
-    public Map<Byte, SOCKS5MethodImpl> getMethodImpls() {
-        return Collections.unmodifiableMap(methodImpls);
+    public List<? super SOCKS5MethodImpl> getMethodImpls() {
+        return Collections.unmodifiableList(methodImpls);
+    }
+
+    public static SOCKS5MethodsBuilder builder() {
+        return new SOCKS5MethodsBuilder();
     }
 
     public static final class SOCKS5MethodsBuilder {
-        private final List<SOCKS5MethodImpl> methodImpls;
+        private final SequencedSet<? super SOCKS5MethodImpl> methodImpls;
 
         private SOCKS5MethodsBuilder() {
-            methodImpls = new ArrayList<>();
+            methodImpls = new LinkedHashSet<>();
         }
 
         public SOCKS5MethodsBuilder addMethod(SOCKS5MethodImpl method) {

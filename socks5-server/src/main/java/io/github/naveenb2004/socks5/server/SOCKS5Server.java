@@ -1,64 +1,85 @@
 package io.github.naveenb2004.socks5.server;
 
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.service.MethodSelectionService;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public final class SOCKS5Server {
-    private final int port;
-    private final int backlog;
-    private final InetAddress bindAddress;
+    private final SOCKS5ServerConfiguration configuration;
 
     private ServerSocket serverSocket;
+    private Thread serverThread;
+    private ExecutorService clientExecutor;
+    private boolean bootstrapped;
 
-    private SOCKS5Server(int port,
-                         int backlog,
-                         InetAddress bindAddress) {
-        this.port = port;
-        this.backlog = backlog;
-        this.bindAddress = bindAddress;
+    private SOCKS5Server(SOCKS5ServerConfiguration configuration) {
+        this.configuration = configuration;
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public int getBacklog() {
-        return backlog;
-    }
-
-    public InetAddress getBindAddress() {
-        return bindAddress;
+    public SOCKS5ServerConfiguration getConfiguration() {
+        return configuration;
     }
 
     public ServerSocket getServerSocket() {
         return serverSocket;
     }
 
-    public void init() throws SOCKS5ServerException {
+    public synchronized void init() throws SOCKS5ServerException {
         if (serverSocket != null) throw new SOCKS5ServerException("Server already initialized");
         try {
-            if (bindAddress == null) {
-                serverSocket = new ServerSocket(port, backlog);
+            if (configuration.getBindAddress() == null) {
+                serverSocket = new ServerSocket(
+                        configuration.getPort(),
+                        configuration.getBacklog());
             } else {
-                serverSocket = new ServerSocket(port, backlog, bindAddress);
+                serverSocket = new ServerSocket(
+                        configuration.getPort(),
+                        configuration.getBacklog(),
+                        configuration.getBindAddress());
             }
+            clientExecutor = Executors.newFixedThreadPool(
+                    configuration.getMaxClients(),
+                    configuration.getClientThreadFactory());
+            bootstrapped = false;
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
         }
     }
 
-    public void bootstrap() {
-
+    public synchronized void bootstrap() throws SOCKS5ServerException {
+        if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
+        if (bootstrapped) throw new SOCKS5ServerException("Server already bootstrapped");
+        serverThread = Thread.ofPlatform().start(() -> {
+            try {
+                while (!serverSocket.isClosed()) {
+                    clientExecutor.execute(new MethodSelectionService(
+                            serverSocket.accept(),
+                            configuration.getSocks5Methods()));
+                }
+            } catch (IOException e) {
+                throw new SOCKS5ServerException(e);
+            }
+        });
+        bootstrapped = true;
     }
 
-    public void destroy() throws SOCKS5ServerException {
+    public synchronized void destroy() throws SOCKS5ServerException {
         if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
         try {
             serverSocket.close();
-        } catch (IOException e) {
+            if (serverThread.isAlive()) serverThread.interrupt();
+            clientExecutor.shutdown();
+            if (!clientExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                clientExecutor.shutdownNow();
+            }
+            serverSocket = null;
+            bootstrapped = false;
+        } catch (IOException | InterruptedException e) {
             throw new SOCKS5ServerException(e);
         }
     }
@@ -68,31 +89,19 @@ public final class SOCKS5Server {
     }
 
     public static final class SOCKS5ServerBuilder {
-        private int port;
-        private int backlog;
-        private InetAddress bindAddress;
+        private SOCKS5ServerConfiguration configuration;
 
         private SOCKS5ServerBuilder() {
         }
 
-        public SOCKS5ServerBuilder port(int port) {
-            this.port = port;
+        public SOCKS5ServerBuilder configuration(SOCKS5ServerConfiguration configuration) {
+            this.configuration = configuration;
             return this;
         }
 
-        public SOCKS5ServerBuilder backlog(int backlog) {
-            this.backlog = backlog;
-            return this;
-        }
-
-        public SOCKS5ServerBuilder bindAddress(InetAddress bindAddress) {
-            this.bindAddress = bindAddress;
-            return this;
-        }
-
-        public SOCKS5Server build() {
-            if (port < 0 || port > 65535) throw new IllegalArgumentException("Port must be between 0 and 65535");
-            return new SOCKS5Server(port, backlog, bindAddress);
+        public SOCKS5Server build() throws SOCKS5ServerException {
+            if (configuration == null) throw new SOCKS5ServerException("Configuration not set");
+            return new SOCKS5Server(configuration);
         }
     }
 }

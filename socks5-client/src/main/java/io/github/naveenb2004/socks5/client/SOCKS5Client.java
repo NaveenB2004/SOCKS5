@@ -4,37 +4,72 @@ import io.github.naveenb2004.socks5.client.command.response.BindResponse;
 import io.github.naveenb2004.socks5.client.command.response.ConnectResponse;
 import io.github.naveenb2004.socks5.client.command.response.UdpAssociateResponse;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
+import io.github.naveenb2004.socks5.client.service.MethodSelectionService;
 
-import java.net.InetAddress;
+import java.io.IOException;
+import java.net.Socket;
 
 public final class SOCKS5Client {
-    private final InetAddress socks5ServerAddress;
-    private final int socks5ServerPort;
+    private final SOCKS5ClientConfiguration configuration;
 
-    private SOCKS5Client(InetAddress socks5ServerAddress,
-                         int socks5ServerPort) {
-        this.socks5ServerAddress = socks5ServerAddress;
-        this.socks5ServerPort = socks5ServerPort;
+    private Socket socket;
+
+    private SOCKS5Client(SOCKS5ClientConfiguration configuration) {
+        this.configuration = configuration;
     }
 
-    public InetAddress getSocks5ServerAddress() {
-        return socks5ServerAddress;
+    public SOCKS5ClientConfiguration getConfiguration() {
+        return configuration;
     }
 
-    public int getSocks5ServerPort() {
-        return socks5ServerPort;
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public synchronized void init() throws SOCKS5ClientException {
+        if (socket != null) throw new SOCKS5ClientException("Socket already initialized");
+        try {
+            if (configuration.getLocalAddress() == null) {
+                socket = new Socket(configuration.getServerAddress(), configuration.getServerPort());
+            } else {
+                socket = new Socket(configuration.getLocalAddress(), configuration.getServerPort(),
+                        configuration.getLocalAddress(), configuration.getLocalPort());
+            }
+        } catch (IOException e) {
+            throw new SOCKS5ClientException(e);
+        }
+    }
+
+    private void doMethodSelectionAndNegotiation() throws SOCKS5ClientException {
+        new MethodSelectionService(socket, configuration.getSOCKS5Methods()).run();
     }
 
     public BindResponse bind() {
+        if (socket == null) throw new SOCKS5ClientException("Socket not initialized");
+        doMethodSelectionAndNegotiation();
         return null;
     }
 
     public ConnectResponse connect() {
+        if (socket == null) throw new SOCKS5ClientException("Socket not initialized");
+        doMethodSelectionAndNegotiation();
         return null;
     }
 
     public UdpAssociateResponse udpAssociate() {
+        if (socket == null) throw new SOCKS5ClientException("Socket not initialized");
+        doMethodSelectionAndNegotiation();
         return null;
+    }
+
+    public synchronized void destroy() throws SOCKS5ClientException {
+        if (socket == null) throw new SOCKS5ClientException("Socket not initialized");
+        try {
+            if (!socket.isClosed()) socket.close();
+            socket = null;
+        } catch (IOException e) {
+            throw new SOCKS5ClientException(e);
+        }
     }
 
     public static SOCKS5ClientBuilder builder() {
@@ -42,26 +77,19 @@ public final class SOCKS5Client {
     }
 
     public static final class SOCKS5ClientBuilder {
-        private InetAddress socks5ServerAddress;
-        private int socks5ServerPort;
+        private SOCKS5ClientConfiguration configuration;
 
         private SOCKS5ClientBuilder() {
         }
 
-        public SOCKS5ClientBuilder socks5ServerAddress(InetAddress socks5ServerAddress) {
-            this.socks5ServerAddress = socks5ServerAddress;
-            return this;
-        }
-
-        public SOCKS5ClientBuilder socks5Port(int socks5ServerPort) {
-            this.socks5ServerPort = socks5ServerPort;
+        public SOCKS5ClientBuilder configuration(SOCKS5ClientConfiguration configuration) {
+            this.configuration = configuration;
             return this;
         }
 
         public SOCKS5Client build() {
-            if (socks5ServerAddress == null) throw new SOCKS5ClientException("SOCKS5 server address cannot be null");
-            if (socks5ServerPort < 1 || socks5ServerPort > 65535) throw new SOCKS5ClientException("SOCKS5 server port out of range");
-            return new SOCKS5Client(socks5ServerAddress, socks5ServerPort);
+            if (configuration == null) throw new SOCKS5ClientException("Configuration not set");
+            return new SOCKS5Client(configuration);
         }
     }
 }
