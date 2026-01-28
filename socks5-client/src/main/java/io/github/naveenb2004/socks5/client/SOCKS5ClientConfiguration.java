@@ -1,11 +1,12 @@
 package io.github.naveenb2004.socks5.client;
 
 import io.github.naveenb2004.socks5.base.Immutable;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Methods;
-import io.github.naveenb2004.socks5.base.method.impl.NoAuthentication;
+import io.github.naveenb2004.socks5.base.method.NoAuthentication;
+import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 
 import java.net.InetAddress;
+import java.util.*;
 
 @Immutable
 public final class SOCKS5ClientConfiguration {
@@ -13,13 +14,13 @@ public final class SOCKS5ClientConfiguration {
     private final int serverPort;
     private final InetAddress localAddress;
     private final int localPort;
-    private final SOCKS5Methods socks5Methods;
+    private final List<SOCKS5Method> socks5Methods;
 
     private SOCKS5ClientConfiguration(InetAddress serverAddress,
                                       int serverPort,
                                       InetAddress localAddress,
                                       int localPort,
-                                      SOCKS5Methods socks5Methods) {
+                                      List<SOCKS5Method> socks5Methods) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         this.localAddress = localAddress;
@@ -43,8 +44,8 @@ public final class SOCKS5ClientConfiguration {
         return localPort;
     }
 
-    public SOCKS5Methods getSOCKS5Methods() {
-        return socks5Methods;
+    public List<SOCKS5Method> getSOCKS5Methods() {
+        return Collections.unmodifiableList(socks5Methods);
     }
 
     public static SOCKS5ClientConfigurationBuilder builder() {
@@ -56,7 +57,7 @@ public final class SOCKS5ClientConfiguration {
         private int serverPort;
         private InetAddress localAddress;
         private int localPort;
-        private SOCKS5Methods socks5Methods;
+        private SequencedSet<SOCKS5Method> socks5Methods = new LinkedHashSet<>();
 
         private SOCKS5ClientConfigurationBuilder() {
         }
@@ -82,17 +83,18 @@ public final class SOCKS5ClientConfiguration {
             return this;
         }
 
-        public SOCKS5ClientConfigurationBuilder socks5Methods(SOCKS5Methods socks5Methods) {
-            if (socks5Methods == null) throw new SOCKS5ClientException("SOCKS5 methods cannot be null");
-            this.socks5Methods = socks5Methods;
+        public SOCKS5ClientConfigurationBuilder addSocks5Methods(SOCKS5Method socks5Method) {
+            if (socks5Method == null) throw new SOCKS5ClientException("SOCKS5 methods cannot be null");
+            this.socks5Methods.add(socks5Method);
             return this;
         }
 
         public SOCKS5ClientConfiguration build() {
             if (serverAddress == null) throw new SOCKS5ClientException("Server address not set");
             if (serverPort < 1 || serverPort > 65535) throw new SOCKS5ClientException("Server port out of range");
-            if (socks5Methods == null) socks5Methods = SOCKS5Methods.builder().addMethod(new NoAuthentication()).build();
-            return new SOCKS5ClientConfiguration(serverAddress, serverPort, localAddress, localPort, socks5Methods);
+            if (socks5Methods.isEmpty()) socks5Methods.add(new NoAuthentication());
+            List<SOCKS5Method> socks5MethodsList = new ArrayList<>(socks5Methods);
+            return new SOCKS5ClientConfiguration(serverAddress, serverPort, localAddress, localPort, socks5MethodsList);
         }
     }
 }

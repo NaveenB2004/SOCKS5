@@ -1,15 +1,16 @@
 package io.github.naveenb2004.socks5.server.service;
 
-import io.github.naveenb2004.socks5.base.method.SOCKS5Methods;
+import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 
 import java.net.Socket;
+import java.util.List;
 
 public final class MethodSelectionService implements Runnable {
     private final Socket socket;
-    private final SOCKS5Methods socks5Methods;
+    private final List<SOCKS5Method> socks5Methods;
 
     public MethodSelectionService(Socket socket,
-                                  SOCKS5Methods socks5Methods) {
+                                  List<SOCKS5Method> socks5Methods) {
         this.socket = socket;
         this.socks5Methods = socks5Methods;
     }

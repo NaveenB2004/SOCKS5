@@ -1,11 +1,12 @@
 package io.github.naveenb2004.socks5.server;
 
 import io.github.naveenb2004.socks5.base.Immutable;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Methods;
-import io.github.naveenb2004.socks5.base.method.impl.NoAuthentication;
+import io.github.naveenb2004.socks5.base.method.NoAuthentication;
+import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
 import java.net.InetAddress;
+import java.util.*;
 import java.util.concurrent.ThreadFactory;
 
 @Immutable
@@ -15,14 +16,14 @@ public final class SOCKS5ServerConfiguration {
     private final InetAddress bindAddress;
     private final int maxClients;
     private final ThreadFactory clientThreadFactory;
-    private final SOCKS5Methods socks5Methods;
+    private final List<SOCKS5Method> socks5Methods;
 
     private SOCKS5ServerConfiguration(int port,
                                       int backlog,
                                       InetAddress bindAddress,
                                       int maxClients,
                                       ThreadFactory clientThreadFactory,
-                                      SOCKS5Methods socks5Methods) {
+                                      List<SOCKS5Method> socks5Methods) {
         this.port = port;
         this.backlog = backlog;
         this.bindAddress = bindAddress;
@@ -51,8 +52,8 @@ public final class SOCKS5ServerConfiguration {
         return clientThreadFactory;
     }
 
-    public SOCKS5Methods getSocks5Methods() {
-        return socks5Methods;
+    public List<SOCKS5Method> getSocks5Methods() {
+        return Collections.unmodifiableList(socks5Methods);
     }
 
     public static SOCKS5ServerConfigurationBuilder builder() {
@@ -65,7 +66,7 @@ public final class SOCKS5ServerConfiguration {
         private InetAddress bindAddress;
         private int maxClients = 100;
         private ThreadFactory clientThreadFactory = Thread.ofVirtual().factory();
-        private SOCKS5Methods socks5Methods;
+        private SequencedSet<SOCKS5Method> socks5Methods = new LinkedHashSet<>();
 
         private SOCKS5ServerConfigurationBuilder() {
         }
@@ -98,15 +99,16 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
-        public SOCKS5ServerConfigurationBuilder addSocks5MethodImpl(SOCKS5Methods socks5Methods) throws SOCKS5ServerException {
-            if (socks5Methods == null) throw new SOCKS5ServerException("SOCKS5 methods cannot be null");
-            this.socks5Methods = socks5Methods;
+        public SOCKS5ServerConfigurationBuilder addSocks5MethodImpl(SOCKS5Method socks5Method) throws SOCKS5ServerException {
+            if (socks5Method == null) throw new SOCKS5ServerException("SOCKS5 method cannot be null");
+            this.socks5Methods.add(socks5Method);
             return this;
         }
 
         public SOCKS5ServerConfiguration build() {
-            if (socks5Methods == null) socks5Methods = SOCKS5Methods.builder().addMethod(new NoAuthentication()).build();
-            return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients, clientThreadFactory, socks5Methods);
+            if (socks5Methods.isEmpty()) socks5Methods.add(new NoAuthentication());
+            List<SOCKS5Method> socks5MethodsList = new ArrayList<>(socks5Methods);
+            return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients, clientThreadFactory, socks5MethodsList);
         }
     }
 }
