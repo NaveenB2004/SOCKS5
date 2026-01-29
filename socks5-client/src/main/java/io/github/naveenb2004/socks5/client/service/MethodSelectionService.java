@@ -1,9 +1,6 @@
 package io.github.naveenb2004.socks5.client.service;
 
-import io.github.naveenb2004.socks5.base.exception.SOCKS5ServiceException;
-import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientMethodException;
-import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientServiceException;
-import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientVersionException;
+import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
 
 import java.io.IOException;
@@ -26,7 +23,7 @@ public final class MethodSelectionService {
         this.socks5Methods = socks5Methods;
     }
 
-    public void init() throws SOCKS5ClientServiceException {
+    public void init() {
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
@@ -34,7 +31,7 @@ public final class MethodSelectionService {
             processMethodSelection();
             processMethodSubNegotiation();
         } catch (Exception e) {
-            throw new SOCKS5ClientServiceException(e);
+            throw new SOCKS5ClientException(e);
         }
     }
 
@@ -45,15 +42,15 @@ public final class MethodSelectionService {
         outputStream.flush();
 
         int version = inputStream.read();
-        if (version != 0x05) throw new SOCKS5ClientVersionException("Invalid SOCKS version from server");
+        if (version != 0x05) throw new SOCKS5ClientException("Invalid SOCKS version from server");
         int selectedMethod = inputStream.read();
-        if (selectedMethod == 0xff) throw new SOCKS5ClientMethodException("No acceptable SOCKS5 method");
+        if (selectedMethod == 0xff) throw new SOCKS5ClientException("No acceptable SOCKS5 method");
         socks5ClientMethod = socks5Methods.get((byte) selectedMethod);
     }
 
-    private void processMethodSubNegotiation() throws SOCKS5ServiceException {
-        socks5ClientMethod.negotiate(inputStream, outputStream);
-        socks5ClientMethod.setupDecapsulation(inputStream);
-        socks5ClientMethod.setupEncapsulation(outputStream);
+    private void processMethodSubNegotiation() {
+        socks5ClientMethod.negotiateAsClient(inputStream, outputStream);
+        socks5ClientMethod.setupDecapsulationAsClient(inputStream);
+        socks5ClientMethod.setupEncapsulationAsClient(outputStream);
     }
 }

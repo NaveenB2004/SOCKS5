@@ -1,6 +1,6 @@
 package io.github.naveenb2004.socks5.server.config;
 
-import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import io.github.naveenb2004.socks5.server.method.NoAuthentication;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.SequencedSet;
 import java.util.concurrent.ThreadFactory;
 
-@Immutable
+@ImmutableObject
 public final class SOCKS5ServerConfiguration {
     private final int port;
     private final int backlog;

@@ -1,5 +1,7 @@
 package io.github.naveenb2004.socks5.base.command;
 
+import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
+
 public enum CMD {
     CONNECT(0x01),
     BIND(0x02),
@@ -21,6 +23,6 @@ public enum CMD {
                 return cmd;
             }
         }
-        return null;
+        throw new SOCKS5Exception("Invalid CMD value");
     }
 }

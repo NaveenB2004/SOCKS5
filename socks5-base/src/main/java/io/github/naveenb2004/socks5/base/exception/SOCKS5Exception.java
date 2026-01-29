@@ -2,6 +2,7 @@ package io.github.naveenb2004.socks5.base.exception;
 
 public class SOCKS5Exception extends RuntimeException {
     public SOCKS5Exception() {
+        super();
     }
 
     public SOCKS5Exception(String message) {

@@ -1,6 +1,6 @@
 package io.github.naveenb2004.socks5.client.config;
 
-import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientConfigException;
 import io.github.naveenb2004.socks5.client.method.NoAuthentication;
 import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
@@ -8,7 +8,7 @@ import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
 import java.net.InetAddress;
 import java.util.*;
 
-@Immutable
+@ImmutableObject
 public final class SOCKS5ClientConfiguration {
     private final InetAddress serverAddress;
     private final int serverPort;

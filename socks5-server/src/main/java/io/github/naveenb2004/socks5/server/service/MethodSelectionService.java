@@ -1,9 +1,6 @@
 package io.github.naveenb2004.socks5.server.service;
 
-import io.github.naveenb2004.socks5.base.exception.SOCKS5ServiceException;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerMethodException;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerServiceException;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerVersionException;
+import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import io.github.naveenb2004.socks5.server.method.SOCKS5ServerMethod;
 
 import java.io.IOException;
@@ -28,7 +25,7 @@ public final class MethodSelectionService {
         this.socks5ServerMethods = socks5ServerMethods;
     }
 
-    public void init() throws SOCKS5ServerServiceException {
+    public void init() {
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
@@ -36,13 +33,13 @@ public final class MethodSelectionService {
             processMethodSelection();
             processMethodSubNegotiation();
         } catch (Exception e) {
-            throw new SOCKS5ServerServiceException(e);
+            throw new SOCKS5ServerException(e);
         }
     }
 
     private void processMethodSelection() throws IOException {
         int version = inputStream.read();
-        if (version != 0x05) throw new SOCKS5ServerVersionException("Invalid SOCKS version from client");
+        if (version != 0x05) throw new SOCKS5ServerException("Invalid SOCKS version from client");
         int nmethods = inputStream.read();
         Set<Byte> methods = new HashSet<>(nmethods);
         for (int i = 0; i < nmethods; i++) {
@@ -59,13 +56,13 @@ public final class MethodSelectionService {
             outputStream.write(0xff);
             outputStream.flush();
             socket.close();
-            throw new SOCKS5ServerMethodException("No acceptable SOCKS5 method");
+            throw new SOCKS5ServerException("No acceptable SOCKS5 method");
         }
     }
 
-    private void processMethodSubNegotiation() throws SOCKS5ServiceException {
-        socks5ServerMethod.negotiate(inputStream, outputStream);
-        socks5ServerMethod.setupDecapsulation(inputStream);
-        socks5ServerMethod.setupEncapsulation(outputStream);
+    private void processMethodSubNegotiation() {
+        socks5ServerMethod.negotiateAsServer(inputStream, outputStream);
+        socks5ServerMethod.setupDecapsulationAsServer(inputStream);
+        socks5ServerMethod.setupEncapsulationAsServer(outputStream);
     }
 }

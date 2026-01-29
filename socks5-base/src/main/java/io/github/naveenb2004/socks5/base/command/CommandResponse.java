@@ -1,13 +1,13 @@
 package io.github.naveenb2004.socks5.base.command;
 
 import io.github.naveenb2004.socks5.base.ATYP;
-import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
-@Immutable
+@ImmutableObject
 public record CommandResponse(REP rep,
                               ATYP atyp,
-                              InetAddress bndAddr,
-                              int bndPort) {
+                              InetSocketAddress dest) {
 }

@@ -1,7 +1,7 @@
 package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.base.ATYP;
-import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
 import io.github.naveenb2004.socks5.base.command.CMD;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException;
 
@@ -9,7 +9,7 @@ import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
 
-@Immutable
+@ImmutableObject
 public final class SOCKS5Ruleset {
     public enum RuleState {
         ALLOW,

@@ -1,5 +1,7 @@
 package io.github.naveenb2004.socks5.base.command;
 
+import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
+
 public enum REP {
     SUCCEEDED(0x00),
     GENERAL_SOCKS_SERVER_FAILURE(0x01),
@@ -21,12 +23,12 @@ public enum REP {
         return value;
     }
 
-    public static REP getByValue(int value) {
+    public static REP valueOf(int value) {
         for (REP rsv : REP.values()) {
             if (rsv.getValue() == value) {
                 return rsv;
             }
         }
-        return null;
+        throw new SOCKS5Exception("Invalid REP value");
     }
 }

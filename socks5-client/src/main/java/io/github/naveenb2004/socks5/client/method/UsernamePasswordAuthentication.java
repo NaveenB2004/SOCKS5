@@ -1,15 +1,15 @@
 package io.github.naveenb2004.socks5.client.method;
 
-import io.github.naveenb2004.socks5.base.Immutable;
-import io.github.naveenb2004.socks5.base.exception.SOCKS5ConfigException;
-import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientServiceException;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
+import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientConfigException;
+import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-@Immutable
+@ImmutableObject
 public final class UsernamePasswordAuthentication implements SOCKS5ClientMethod {
     private final String uname;
     private final String passwd;
@@ -27,7 +27,7 @@ public final class UsernamePasswordAuthentication implements SOCKS5ClientMethod 
 
     @Override
     public void negotiateAsClient(InputStream inputStream,
-                                  OutputStream outputStream) throws SOCKS5ClientServiceException {
+                                  OutputStream outputStream) {
         try {
             outputStream.write(0x01);
             outputStream.write(uname.length());
@@ -37,11 +37,11 @@ public final class UsernamePasswordAuthentication implements SOCKS5ClientMethod 
             outputStream.flush();
 
             int subNegotiationVer = inputStream.read();
-            if (subNegotiationVer != 0x01) throw new SOCKS5ClientServiceException("Invalid negotiation version");
+            if (subNegotiationVer != 0x01) throw new SOCKS5ClientException("Invalid negotiation version");
             int status = inputStream.read();
-            if (status != 0x00) throw new SOCKS5ClientServiceException("Negotiation failed with status: " + status);
-        } catch (IOException | SOCKS5ClientServiceException e) {
-            throw new SOCKS5ClientServiceException(e);
+            if (status != 0x00) throw new SOCKS5ClientException("Negotiation failed with status: " + status);
+        } catch (IOException | SOCKS5ClientException e) {
+            throw new SOCKS5ClientException(e);
         }
     }
 
@@ -76,12 +76,12 @@ public final class UsernamePasswordAuthentication implements SOCKS5ClientMethod 
             return this;
         }
 
-        public SOCKS5ClientMethod build() throws SOCKS5ConfigException {
+        public SOCKS5ClientMethod build() {
             if (uname == null || uname.isBlank() || passwd == null) {
-                throw new SOCKS5ConfigException("Invalid username and/or password");
+                throw new SOCKS5ClientConfigException("Invalid username and/or password");
             }
-            if (uname.length() > 255) throw new SOCKS5ConfigException("Username too long");
-            if (passwd.length() > 255) throw new SOCKS5ConfigException("Password too long");
+            if (uname.length() > 255) throw new SOCKS5ClientConfigException("Username too long");
+            if (passwd.length() > 255) throw new SOCKS5ClientConfigException("Password too long");
             return new UsernamePasswordAuthentication(uname, passwd);
         }
     }

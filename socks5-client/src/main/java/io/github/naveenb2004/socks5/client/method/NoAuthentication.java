@@ -1,11 +1,11 @@
 package io.github.naveenb2004.socks5.client.method;
 
-import io.github.naveenb2004.socks5.base.Immutable;
+import io.github.naveenb2004.socks5.base.ImmutableObject;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
-@Immutable
+@ImmutableObject
 public final class NoAuthentication implements SOCKS5ClientMethod {
     private NoAuthentication() {
     }
