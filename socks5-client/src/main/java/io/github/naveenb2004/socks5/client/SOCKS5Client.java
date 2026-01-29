@@ -3,6 +3,7 @@ package io.github.naveenb2004.socks5.client;
 import io.github.naveenb2004.socks5.client.command.response.BindResponse;
 import io.github.naveenb2004.socks5.client.command.response.ConnectResponse;
 import io.github.naveenb2004.socks5.client.command.response.UdpAssociateResponse;
+import io.github.naveenb2004.socks5.client.config.SOCKS5ClientConfiguration;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientServiceException;
 import io.github.naveenb2004.socks5.client.service.MethodSelectionService;

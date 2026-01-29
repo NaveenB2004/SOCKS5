@@ -2,7 +2,7 @@ package io.github.naveenb2004.socks5.server.exception;
 
 import io.github.naveenb2004.socks5.base.exception.SOCKS5MethodException;
 
-public class SOCKS5ServerMethodException extends SOCKS5MethodException {
+public final class SOCKS5ServerMethodException extends SOCKS5MethodException {
     public SOCKS5ServerMethodException() {
         super();
     }

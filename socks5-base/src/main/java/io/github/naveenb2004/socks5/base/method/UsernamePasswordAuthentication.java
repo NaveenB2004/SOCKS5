@@ -1,5 +1,6 @@
 package io.github.naveenb2004.socks5.base.method;
 
+import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ConfigException;
 
 import java.io.InputStream;
@@ -7,6 +8,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+@Immutable
 public final class UsernamePasswordAuthentication implements SOCKS5Method {
     private Map<String, String> usernamePasswordMap;
 
@@ -22,6 +24,7 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
     @Override
     public void negotiate(InputStream inputStream,
                           OutputStream outputStream) {
+        // TODO impl
     }
 
     @Override
@@ -50,8 +53,7 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
 
         public SOCKS5Method build() throws SOCKS5ConfigException {
             if (this.usernamePasswordMap.isEmpty())  throw new SOCKS5ConfigException("No username and password provided");
-            Map<String, String> usernamePasswordMap = new HashMap<>(this.usernamePasswordMap);
-            return new UsernamePasswordAuthentication(usernamePasswordMap);
+            return new UsernamePasswordAuthentication(Map.copyOf(usernamePasswordMap));
         }
     }
 }

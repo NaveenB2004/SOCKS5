@@ -1,4 +1,4 @@
-package io.github.naveenb2004.socks5.server;
+package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.method.NoAuthentication;
@@ -7,7 +7,9 @@ import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
 import java.net.InetAddress;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.SequencedSet;
 import java.util.concurrent.ThreadFactory;
 
 @Immutable
@@ -18,19 +20,22 @@ public final class SOCKS5ServerConfiguration {
     private final int maxClients;
     private final ThreadFactory clientThreadFactory;
     private final List<SOCKS5Method> socks5Methods;
+    private final SOCKS5Ruleset socks5Ruleset;
 
     private SOCKS5ServerConfiguration(int port,
                                       int backlog,
                                       InetAddress bindAddress,
                                       int maxClients,
                                       ThreadFactory clientThreadFactory,
-                                      List<SOCKS5Method> socks5Methods) {
+                                      List<SOCKS5Method> socks5Methods,
+                                      SOCKS5Ruleset socks5Ruleset) {
         this.port = port;
         this.backlog = backlog;
         this.bindAddress = bindAddress;
         this.maxClients = maxClients;
         this.clientThreadFactory = clientThreadFactory;
         this.socks5Methods = socks5Methods;
+        this.socks5Ruleset = socks5Ruleset;
     }
 
     public int getPort() {
@@ -54,7 +59,11 @@ public final class SOCKS5ServerConfiguration {
     }
 
     public List<SOCKS5Method> getSocks5Methods() {
-        return Collections.unmodifiableList(socks5Methods);
+        return socks5Methods;
+    }
+
+    public SOCKS5Ruleset getSocks5Ruleset() {
+        return socks5Ruleset;
     }
 
     public static SOCKS5ServerConfigurationBuilder builder() {
@@ -67,7 +76,8 @@ public final class SOCKS5ServerConfiguration {
         private InetAddress bindAddress;
         private int maxClients = 100;
         private ThreadFactory clientThreadFactory = Thread.ofVirtual().factory();
-        private SequencedSet<SOCKS5Method> socks5Methods = new LinkedHashSet<>();
+        private final SequencedSet<SOCKS5Method> socks5Methods = new LinkedHashSet<>();
+        private SOCKS5Ruleset socks5Ruleset;
 
         private SOCKS5ServerConfigurationBuilder() {
         }
@@ -106,10 +116,15 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
+        public SOCKS5ServerConfigurationBuilder socks5Ruleset(SOCKS5Ruleset socks5Ruleset) {
+            this.socks5Ruleset = socks5Ruleset;
+            return this;
+        }
+
         public SOCKS5ServerConfiguration build() {
             if (socks5Methods.isEmpty()) socks5Methods.add(NoAuthentication.builder().build());
-            List<SOCKS5Method> socks5MethodsList = new ArrayList<>(socks5Methods);
-            return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients, clientThreadFactory, socks5MethodsList);
+            return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients,
+                    clientThreadFactory, List.copyOf(socks5Methods), socks5Ruleset);
         }
     }
 }

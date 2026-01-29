@@ -1,4 +1,4 @@
-package io.github.naveenb2004.socks5.client;
+package io.github.naveenb2004.socks5.client.config;
 
 import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.method.NoAuthentication;
