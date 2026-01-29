@@ -1,9 +1,9 @@
 package io.github.naveenb2004.socks5.client.config;
 
 import io.github.naveenb2004.socks5.base.Immutable;
-import io.github.naveenb2004.socks5.base.method.NoAuthentication;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientConfigException;
+import io.github.naveenb2004.socks5.client.method.NoAuthentication;
+import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
 
 import java.net.InetAddress;
 import java.util.*;
@@ -14,13 +14,13 @@ public final class SOCKS5ClientConfiguration {
     private final int serverPort;
     private final InetAddress localAddress;
     private final int localPort;
-    private final Map<Byte, SOCKS5Method> socks5Methods;
+    private final Map<Byte, SOCKS5ClientMethod> socks5Methods;
 
     private SOCKS5ClientConfiguration(InetAddress serverAddress,
                                       int serverPort,
                                       InetAddress localAddress,
                                       int localPort,
-                                      Map<Byte, SOCKS5Method> socks5Methods) {
+                                      Map<Byte, SOCKS5ClientMethod> socks5Methods) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         this.localAddress = localAddress;
@@ -44,7 +44,7 @@ public final class SOCKS5ClientConfiguration {
         return localPort;
     }
 
-    public Map<Byte, SOCKS5Method> getSOCKS5Methods() {
+    public Map<Byte, SOCKS5ClientMethod> getSOCKS5Methods() {
         return Collections.unmodifiableMap(socks5Methods);
     }
 
@@ -57,7 +57,7 @@ public final class SOCKS5ClientConfiguration {
         private int serverPort;
         private InetAddress localAddress;
         private int localPort;
-        private final Set<SOCKS5Method> socks5Methods = new HashSet<>();
+        private final Set<SOCKS5ClientMethod> socks5ClientMethods = new HashSet<>();
 
         private SOCKS5ClientConfigurationBuilder() {
         }
@@ -83,18 +83,19 @@ public final class SOCKS5ClientConfiguration {
             return this;
         }
 
-        public SOCKS5ClientConfigurationBuilder addSocks5Methods(SOCKS5Method socks5Method) throws SOCKS5ClientConfigException {
-            if (socks5Method == null) throw new SOCKS5ClientConfigException("SOCKS5 methods cannot be null");
-            this.socks5Methods.add(socks5Method);
+        public SOCKS5ClientConfigurationBuilder addSocks5Methods(SOCKS5ClientMethod socks5ClientMethod) throws SOCKS5ClientConfigException {
+            if (socks5ClientMethod == null) throw new SOCKS5ClientConfigException("SOCKS5 methods cannot be null");
+            this.socks5ClientMethods.add(socks5ClientMethod);
             return this;
         }
 
         public SOCKS5ClientConfiguration build() throws SOCKS5ClientConfigException {
             if (serverAddress == null) throw new SOCKS5ClientConfigException("Server address not set");
             if (serverPort < 1 || serverPort > 65535) throw new SOCKS5ClientConfigException("Server port out of range");
-            if (socks5Methods.isEmpty()) socks5Methods.add(NoAuthentication.builder().build());
-            Map<Byte, SOCKS5Method> socks5MethodsMap = new HashMap<>(socks5Methods.size(), 1);
-            for (SOCKS5Method socks5Method : socks5Methods) socks5MethodsMap.put(socks5Method.getMethodId(), socks5Method);
+            if (socks5ClientMethods.isEmpty()) socks5ClientMethods.add(NoAuthentication.builder().build());
+            Map<Byte, SOCKS5ClientMethod> socks5MethodsMap = new HashMap<>(socks5ClientMethods.size(), 1);
+            for (SOCKS5ClientMethod socks5ClientMethod : socks5ClientMethods)
+                socks5MethodsMap.put(socks5ClientMethod.getMethodId(), socks5ClientMethod);
             return new SOCKS5ClientConfiguration(serverAddress, serverPort, localAddress, localPort, socks5MethodsMap);
         }
     }

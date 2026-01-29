@@ -1,10 +1,10 @@
 package io.github.naveenb2004.socks5.client.service;
 
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ServiceException;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientMethodException;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientServiceException;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientVersionException;
+import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,14 +14,14 @@ import java.util.Map;
 
 public final class MethodSelectionService {
     private final Socket socket;
-    private final Map<Byte, SOCKS5Method> socks5Methods;
+    private final Map<Byte, SOCKS5ClientMethod> socks5Methods;
 
     private InputStream inputStream;
     private OutputStream outputStream;
-    private SOCKS5Method socks5Method;
+    private SOCKS5ClientMethod socks5ClientMethod;
 
     public MethodSelectionService(Socket socket,
-                                  Map<Byte, SOCKS5Method> socks5Methods) {
+                                  Map<Byte, SOCKS5ClientMethod> socks5Methods) {
         this.socket = socket;
         this.socks5Methods = socks5Methods;
     }
@@ -48,12 +48,12 @@ public final class MethodSelectionService {
         if (version != 0x05) throw new SOCKS5ClientVersionException("Invalid SOCKS version from server");
         int selectedMethod = inputStream.read();
         if (selectedMethod == 0xff) throw new SOCKS5ClientMethodException("No acceptable SOCKS5 method");
-        socks5Method = socks5Methods.get((byte) selectedMethod);
+        socks5ClientMethod = socks5Methods.get((byte) selectedMethod);
     }
 
     private void processMethodSubNegotiation() throws SOCKS5ServiceException {
-        socks5Method.negotiate(inputStream, outputStream);
-        socks5Method.setupDecapsulation(inputStream);
-        socks5Method.setupEncapsulation(outputStream);
+        socks5ClientMethod.negotiate(inputStream, outputStream);
+        socks5ClientMethod.setupDecapsulation(inputStream);
+        socks5ClientMethod.setupEncapsulation(outputStream);
     }
 }

@@ -6,7 +6,6 @@ import io.github.naveenb2004.socks5.base.command.CMD;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException;
 
 import java.net.InetAddress;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 

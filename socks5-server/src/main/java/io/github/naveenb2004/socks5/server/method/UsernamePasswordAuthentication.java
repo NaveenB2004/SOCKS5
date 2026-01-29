@@ -2,10 +2,8 @@ package io.github.naveenb2004.socks5.server.method;
 
 import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ConfigException;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerServiceException;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerVersionException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Immutable
-public final class UsernamePasswordAuthentication implements SOCKS5Method {
-    private Map<String, String> unamePsswdMap;
+public final class UsernamePasswordAuthentication implements SOCKS5ServerMethod {
+    private final Map<String, String> unamePsswdMap;
 
     private UsernamePasswordAuthentication(Map<String, String> unamePsswdMap) {
         this.unamePsswdMap = unamePsswdMap;
@@ -28,8 +26,8 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
     }
 
     @Override
-    public void negotiate(InputStream inputStream,
-                          OutputStream outputStream) throws SOCKS5ServerServiceException {
+    public void negotiateAsServer(InputStream inputStream,
+                                  OutputStream outputStream) throws SOCKS5ServerServiceException {
         try {
             int subNegotiationVer = inputStream.read();
             if (subNegotiationVer != 0x01) throw new SOCKS5ServerServiceException("Invalid negotiation version");
@@ -64,12 +62,12 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
     }
 
     @Override
-    public InputStream setupDecapsulation(InputStream inputStream) {
+    public InputStream setupDecapsulationAsServer(InputStream inputStream) {
         return inputStream;
     }
 
     @Override
-    public OutputStream setupEncapsulation(OutputStream outputStream) {
+    public OutputStream setupEncapsulationAsServer(OutputStream outputStream) {
         return outputStream;
     }
 
@@ -94,7 +92,7 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
             unamePsswdMap.put(uname, passwd);
         }
 
-        public SOCKS5Method build() throws SOCKS5ConfigException {
+        public SOCKS5ServerMethod build() throws SOCKS5ConfigException {
             if (this.unamePsswdMap.isEmpty()) throw new SOCKS5ConfigException("No username and password provided");
             return new UsernamePasswordAuthentication(Map.copyOf(unamePsswdMap));
         }

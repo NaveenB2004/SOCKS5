@@ -3,7 +3,6 @@ package io.github.naveenb2004.socks5.client.method;
 import io.github.naveenb2004.socks5.base.Immutable;
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ConfigException;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientServiceException;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +10,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 @Immutable
-public final class UsernamePasswordAuthentication implements SOCKS5Method {
+public final class UsernamePasswordAuthentication implements SOCKS5ClientMethod {
     private final String uname;
     private final String passwd;
 
@@ -27,8 +26,8 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
     }
 
     @Override
-    public void negotiate(InputStream inputStream,
-                          OutputStream outputStream) throws SOCKS5ClientServiceException {
+    public void negotiateAsClient(InputStream inputStream,
+                                  OutputStream outputStream) throws SOCKS5ClientServiceException {
         try {
             outputStream.write(0x01);
             outputStream.write(uname.length());
@@ -47,12 +46,12 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
     }
 
     @Override
-    public InputStream setupDecapsulation(InputStream inputStream) {
+    public InputStream setupDecapsulationAsClient(InputStream inputStream) {
         return inputStream;
     }
 
     @Override
-    public OutputStream setupEncapsulation(OutputStream outputStream) {
+    public OutputStream setupEncapsulationAsClient(OutputStream outputStream) {
         return outputStream;
     }
 
@@ -77,7 +76,7 @@ public final class UsernamePasswordAuthentication implements SOCKS5Method {
             return this;
         }
 
-        public SOCKS5Method build() throws SOCKS5ConfigException {
+        public SOCKS5ClientMethod build() throws SOCKS5ConfigException {
             if (uname == null || uname.isBlank() || passwd == null) {
                 throw new SOCKS5ConfigException("Invalid username and/or password");
             }

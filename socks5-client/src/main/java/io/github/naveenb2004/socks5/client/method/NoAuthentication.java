@@ -1,4 +1,4 @@
-package io.github.naveenb2004.socks5.base.method;
+package io.github.naveenb2004.socks5.client.method;
 
 import io.github.naveenb2004.socks5.base.Immutable;
 
@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 @Immutable
-public final class NoAuthentication implements SOCKS5Method {
+public final class NoAuthentication implements SOCKS5ClientMethod {
     private NoAuthentication() {
     }
 
@@ -16,17 +16,17 @@ public final class NoAuthentication implements SOCKS5Method {
     }
 
     @Override
-    public void negotiate(InputStream inputStream,
-                          OutputStream outputStream) {
+    public void negotiateAsClient(InputStream inputStream,
+                                  OutputStream outputStream) {
     }
 
     @Override
-    public InputStream setupDecapsulation(InputStream inputStream) {
+    public InputStream setupDecapsulationAsClient(InputStream inputStream) {
         return inputStream;
     }
 
     @Override
-    public OutputStream setupEncapsulation(OutputStream outputStream) {
+    public OutputStream setupEncapsulationAsClient(OutputStream outputStream) {
         return outputStream;
     }
 

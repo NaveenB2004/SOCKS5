@@ -1,10 +1,10 @@
 package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.base.Immutable;
-import io.github.naveenb2004.socks5.base.method.NoAuthentication;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.method.NoAuthentication;
+import io.github.naveenb2004.socks5.server.method.SOCKS5ServerMethod;
 
 import java.net.InetAddress;
 import java.util.LinkedHashSet;
@@ -19,7 +19,7 @@ public final class SOCKS5ServerConfiguration {
     private final InetAddress bindAddress;
     private final int maxClients;
     private final ThreadFactory clientThreadFactory;
-    private final List<SOCKS5Method> socks5Methods;
+    private final List<SOCKS5ServerMethod> socks5ServerMethods;
     private final SOCKS5Ruleset socks5Ruleset;
 
     private SOCKS5ServerConfiguration(int port,
@@ -27,14 +27,14 @@ public final class SOCKS5ServerConfiguration {
                                       InetAddress bindAddress,
                                       int maxClients,
                                       ThreadFactory clientThreadFactory,
-                                      List<SOCKS5Method> socks5Methods,
+                                      List<SOCKS5ServerMethod> socks5ServerMethods,
                                       SOCKS5Ruleset socks5Ruleset) {
         this.port = port;
         this.backlog = backlog;
         this.bindAddress = bindAddress;
         this.maxClients = maxClients;
         this.clientThreadFactory = clientThreadFactory;
-        this.socks5Methods = socks5Methods;
+        this.socks5ServerMethods = socks5ServerMethods;
         this.socks5Ruleset = socks5Ruleset;
     }
 
@@ -58,8 +58,8 @@ public final class SOCKS5ServerConfiguration {
         return clientThreadFactory;
     }
 
-    public List<SOCKS5Method> getSocks5Methods() {
-        return socks5Methods;
+    public List<SOCKS5ServerMethod> getSocks5Methods() {
+        return socks5ServerMethods;
     }
 
     public SOCKS5Ruleset getSocks5Ruleset() {
@@ -76,7 +76,7 @@ public final class SOCKS5ServerConfiguration {
         private InetAddress bindAddress;
         private int maxClients = 100;
         private ThreadFactory clientThreadFactory = Thread.ofVirtual().factory();
-        private final SequencedSet<SOCKS5Method> socks5Methods = new LinkedHashSet<>();
+        private final SequencedSet<SOCKS5ServerMethod> socks5ServerMethods = new LinkedHashSet<>();
         private SOCKS5Ruleset socks5Ruleset;
 
         private SOCKS5ServerConfigurationBuilder() {
@@ -110,9 +110,9 @@ public final class SOCKS5ServerConfiguration {
             return this;
         }
 
-        public SOCKS5ServerConfigurationBuilder addSocks5MethodImpl(SOCKS5Method socks5Method) throws SOCKS5ServerConfigException {
-            if (socks5Method == null) throw new SOCKS5ServerException("SOCKS5 method cannot be null");
-            this.socks5Methods.add(socks5Method);
+        public SOCKS5ServerConfigurationBuilder addSocks5MethodImpl(SOCKS5ServerMethod socks5ServerMethod) throws SOCKS5ServerConfigException {
+            if (socks5ServerMethod == null) throw new SOCKS5ServerException("SOCKS5 method cannot be null");
+            this.socks5ServerMethods.add(socks5ServerMethod);
             return this;
         }
 
@@ -122,9 +122,9 @@ public final class SOCKS5ServerConfiguration {
         }
 
         public SOCKS5ServerConfiguration build() {
-            if (socks5Methods.isEmpty()) socks5Methods.add(NoAuthentication.builder().build());
+            if (socks5ServerMethods.isEmpty()) socks5ServerMethods.add(NoAuthentication.builder().build());
             return new SOCKS5ServerConfiguration(port, backlog, bindAddress, maxClients,
-                    clientThreadFactory, List.copyOf(socks5Methods), socks5Ruleset);
+                    clientThreadFactory, List.copyOf(socks5ServerMethods), socks5Ruleset);
         }
     }
 }

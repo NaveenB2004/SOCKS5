@@ -1,10 +1,10 @@
 package io.github.naveenb2004.socks5.server.service;
 
 import io.github.naveenb2004.socks5.base.exception.SOCKS5ServiceException;
-import io.github.naveenb2004.socks5.base.method.SOCKS5Method;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerMethodException;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerServiceException;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerVersionException;
+import io.github.naveenb2004.socks5.server.method.SOCKS5ServerMethod;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,16 +16,16 @@ import java.util.Set;
 
 public final class MethodSelectionService {
     private final Socket socket;
-    private final List<SOCKS5Method> socks5Methods;
+    private final List<SOCKS5ServerMethod> socks5ServerMethods;
 
     private InputStream inputStream;
     private OutputStream outputStream;
-    private SOCKS5Method socks5Method;
+    private SOCKS5ServerMethod socks5ServerMethod;
 
     public MethodSelectionService(Socket socket,
-                                  List<SOCKS5Method> socks5Methods) {
+                                  List<SOCKS5ServerMethod> socks5ServerMethods) {
         this.socket = socket;
-        this.socks5Methods = socks5Methods;
+        this.socks5ServerMethods = socks5ServerMethods;
     }
 
     public void init() throws SOCKS5ServerServiceException {
@@ -48,13 +48,13 @@ public final class MethodSelectionService {
         for (int i = 0; i < nmethods; i++) {
             methods.add((byte) inputStream.read());
         }
-        for (SOCKS5Method method : socks5Methods) {
+        for (SOCKS5ServerMethod method : socks5ServerMethods) {
             if (methods.contains(method.getMethodId())) {
-                socks5Method = method;
+                socks5ServerMethod = method;
                 break;
             }
         }
-        if (socks5Method == null) {
+        if (socks5ServerMethod == null) {
             outputStream.write(0x05);
             outputStream.write(0xff);
             outputStream.flush();
@@ -64,8 +64,8 @@ public final class MethodSelectionService {
     }
 
     private void processMethodSubNegotiation() throws SOCKS5ServiceException {
-        socks5Method.negotiate(inputStream, outputStream);
-        socks5Method.setupDecapsulation(inputStream);
-        socks5Method.setupEncapsulation(outputStream);
+        socks5ServerMethod.negotiate(inputStream, outputStream);
+        socks5ServerMethod.setupDecapsulation(inputStream);
+        socks5ServerMethod.setupEncapsulation(outputStream);
     }
 }
