@@ -1,6 +1,6 @@
 package io.github.naveenb2004.socks5.base.exception;
 
-public final class SOCKS5ConfigException extends RuntimeException {
+public class SOCKS5ConfigException extends RuntimeException {
     public SOCKS5ConfigException() {
         super();
     }

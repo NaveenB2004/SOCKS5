@@ -1,6 +1,7 @@
 package io.github.naveenb2004.socks5.server;
 
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerServiceException;
 import io.github.naveenb2004.socks5.server.service.MethodSelectionService;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public final class SOCKS5Server {
         return serverSocket;
     }
 
-    public synchronized void init() throws SOCKS5ServerException {
+    public synchronized void init() throws SOCKS5ServerException, SOCKS5ServerServiceException {
         if (serverSocket != null) throw new SOCKS5ServerException("Server already initialized");
         try {
             if (configuration.getBindAddress() == null) {
@@ -47,28 +48,29 @@ public final class SOCKS5Server {
                     configuration.getClientThreadFactory());
             bootstrapped = false;
         } catch (IOException e) {
-            throw new SOCKS5ServerException(e);
+            throw new SOCKS5ServerServiceException(e);
         }
     }
 
     public synchronized void bootstrap() throws SOCKS5ServerException {
         if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
         if (bootstrapped) throw new SOCKS5ServerException("Server already bootstrapped");
-        serverThread = Thread.ofPlatform().start(() -> {
-            try {
-                while (!serverSocket.isClosed()) {
-                    clientExecutor.execute(new MethodSelectionService(
-                            serverSocket.accept(),
-                            configuration.getSocks5Methods()));
-                }
-            } catch (IOException e) {
-                throw new SOCKS5ServerException(e);
+        serverThread = Thread.ofPlatform().factory().newThread(() -> {
+            while (!serverSocket.isClosed()) {
+                clientExecutor.execute(() -> {
+                    try {
+                        new MethodSelectionService(serverSocket.accept(), configuration.getSocks5Methods()).init();
+                    } catch (IOException | SOCKS5ServerServiceException e) {
+                        throw new SOCKS5ServerException(e);
+                    }
+                });
             }
         });
+        serverThread.start();
         bootstrapped = true;
     }
 
-    public synchronized void destroy() throws SOCKS5ServerException {
+    public synchronized void destroy() throws SOCKS5ServerException, SOCKS5ServerServiceException {
         if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
         try {
             serverSocket.close();
@@ -80,7 +82,7 @@ public final class SOCKS5Server {
             serverSocket = null;
             bootstrapped = false;
         } catch (IOException | InterruptedException e) {
-            throw new SOCKS5ServerException(e);
+            throw new SOCKS5ServerServiceException(e);
         }
     }
 
