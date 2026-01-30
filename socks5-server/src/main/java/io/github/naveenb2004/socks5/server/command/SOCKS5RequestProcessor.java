@@ -4,14 +4,29 @@ import io.github.naveenb2004.socks5.base.ATYP;
 import io.github.naveenb2004.socks5.base.command.CMD;
 import io.github.naveenb2004.socks5.base.command.CommandRequest;
 import io.github.naveenb2004.socks5.base.command.CommandResponse;
+import io.github.naveenb2004.socks5.server.config.SOCKS5Ruleset;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 
-public final class CommandProcessor {
+public abstract sealed class SOCKS5RequestProcessor
+        permits BindRequestProcessor, ConnectRequestProcessor, UdpAssociateRequestProcessor {
+    protected final CMD command;
+    protected final Socket clientSocket;
+    protected final SOCKS5Ruleset socks5Ruleset;
+
+    public SOCKS5RequestProcessor(CMD command,
+                                  Socket clientSocket,
+                                  SOCKS5Ruleset socks5Ruleset) {
+        this.command = command;
+        this.clientSocket = clientSocket;
+        this.socks5Ruleset = socks5Ruleset;
+    }
+
     public static void sendResponse(OutputStream outputStream,
                                     CommandResponse commandResponse) {
         try {
@@ -22,7 +37,7 @@ public final class CommandProcessor {
             if (commandResponse.atyp() == ATYP.DOMAINNAME) {
                 outputStream.write(commandResponse.dest().getHostName().length());
                 outputStream.write(commandResponse.dest().getHostName().getBytes());
-            } else  {
+            } else {
                 outputStream.write(commandResponse.dest().getAddress().getAddress());
             }
             outputStream.write((commandResponse.dest().getPort() >>> 8) & 0xff);

@@ -1,13 +1,10 @@
 package io.github.naveenb2004.socks5.client;
 
 import io.github.naveenb2004.socks5.base.command.CMD;
-import io.github.naveenb2004.socks5.client.command.request.BindRequest;
-import io.github.naveenb2004.socks5.client.command.request.ConnectRequest;
-import io.github.naveenb2004.socks5.client.command.request.SOCKS5Request;
-import io.github.naveenb2004.socks5.client.command.request.UdpAssociateRequest;
 import io.github.naveenb2004.socks5.client.command.response.SOCKS5Response;
 import io.github.naveenb2004.socks5.client.config.SOCKS5ClientConfiguration;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
+import io.github.naveenb2004.socks5.client.service.CommandProcessService;
 import io.github.naveenb2004.socks5.client.service.MethodSelectionService;
 
 import java.io.IOException;
@@ -54,12 +51,7 @@ public final class SOCKS5Client {
         if (destination == null) throw new SOCKS5ClientException("Destination cannot be null");
         try {
             new MethodSelectionService(socket, configuration.getSOCKS5Methods()).init();
-            SOCKS5Request request = switch (command) {
-                case CONNECT -> new ConnectRequest();
-                case BIND -> new BindRequest();
-                case UDP_ASSOCIATE -> new UdpAssociateRequest();
-            };
-            SOCKS5Response response = request.execute();
+            SOCKS5Response response = new CommandProcessService(command, socket, destination).init();
             bootstrapped = true;
             return response;
         } catch (SOCKS5ClientException e) {

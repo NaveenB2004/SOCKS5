@@ -1,18 +1,36 @@
 package io.github.naveenb2004.socks5.client.command;
 
 import io.github.naveenb2004.socks5.base.ATYP;
+import io.github.naveenb2004.socks5.base.command.CMD;
 import io.github.naveenb2004.socks5.base.command.CommandRequest;
 import io.github.naveenb2004.socks5.base.command.CommandResponse;
 import io.github.naveenb2004.socks5.base.command.REP;
+import io.github.naveenb2004.socks5.client.command.response.SOCKS5Response;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-public final class CommandProcessor {
+public abstract sealed class SOCKS5RequestProcessor
+        permits BindRequestProcessor, ConnectRequestProcessor, UdpAssociateRequestProcessor {
+    protected final CMD command;
+    protected final Socket socks5Server;
+    protected final InetSocketAddress destination;
+
+    public SOCKS5RequestProcessor(CMD command,
+                                  Socket socks5Server,
+                                  InetSocketAddress destination) {
+        this.command = command;
+        this.socks5Server = socks5Server;
+        this.destination = destination;
+    }
+
+    public abstract SOCKS5Response execute();
+
     public static void sendRequest(OutputStream outputStream,
                                    CommandRequest commandRequest) {
         try {
