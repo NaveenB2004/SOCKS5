@@ -1,6 +1,4 @@
-package io.github.naveenb2004.socks5.base.command;
-
-import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
+package io.github.naveenb2004.socks5.base;
 
 public enum REP {
     SUCCEEDED(0x00),

@@ -2,10 +2,11 @@ package io.github.naveenb2004.socks5.server.config;
 
 import io.github.naveenb2004.socks5.base.ATYP;
 import io.github.naveenb2004.socks5.base.ImmutableObject;
-import io.github.naveenb2004.socks5.base.command.CMD;
+import io.github.naveenb2004.socks5.base.CMD;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerConfigException;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ public final class SOCKS5Ruleset {
     private final RuleState commandsState;
     private final Set<ATYP> addressTypes;
     private final RuleState addressTypesState;
-    private final Set<InetAddress> destAddresses;
+    private final Set<byte[]> destAddresses;
     private final RuleState destAddressesState;
     private final Set<Integer> destPorts;
     private final RuleState destPortsState;
@@ -29,7 +30,7 @@ public final class SOCKS5Ruleset {
                           RuleState commandsState,
                           Set<ATYP> addressTypes,
                           RuleState addressTypesState,
-                          Set<InetAddress> destAddresses,
+                          Set<byte[]> destAddresses,
                           RuleState destAddressesState,
                           Set<Integer> destPorts,
                           RuleState destPortsState) {
@@ -59,7 +60,7 @@ public final class SOCKS5Ruleset {
         return addressTypesState;
     }
 
-    public Set<InetAddress> getDestAddresses() {
+    public Set<byte[]> getDestAddresses() {
         return destAddresses;
     }
 
@@ -84,7 +85,7 @@ public final class SOCKS5Ruleset {
         private RuleState commandsState;
         private final Set<ATYP> addressTypes = new HashSet<>();
         private RuleState addressTypesState;
-        private final Set<InetAddress> destAddresses = new HashSet<>();
+        private final Set<byte[]> destAddresses = new HashSet<>();
         private RuleState destAddressesState;
         private final Set<Integer> destPorts = new HashSet<>();
         private RuleState destPortsState;
@@ -114,7 +115,7 @@ public final class SOCKS5Ruleset {
             return this;
         }
 
-        public SOCKS5RulesetBuilder addDestAddress(InetAddress address) {
+        public SOCKS5RulesetBuilder addDestAddress(byte[] address) {
             if (address == null) throw new SOCKS5ServerConfigException("Address is null");
             destAddresses.add(address);
             return this;

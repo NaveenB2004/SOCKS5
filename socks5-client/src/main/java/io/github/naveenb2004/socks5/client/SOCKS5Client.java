@@ -1,11 +1,17 @@
 package io.github.naveenb2004.socks5.client;
 
-import io.github.naveenb2004.socks5.base.command.CMD;
-import io.github.naveenb2004.socks5.client.command.response.SOCKS5Response;
+import io.github.naveenb2004.socks5.base.CMD;
+import io.github.naveenb2004.socks5.client.command.BindResponse;
+import io.github.naveenb2004.socks5.client.command.ConnectResponse;
+import io.github.naveenb2004.socks5.client.command.SOCKS5Response;
+import io.github.naveenb2004.socks5.client.command.UdpAssociateResponse;
+import io.github.naveenb2004.socks5.client.command.processor.BindProcessor;
+import io.github.naveenb2004.socks5.client.command.processor.ConnectProcessor;
+import io.github.naveenb2004.socks5.client.command.processor.CommandProcessor;
+import io.github.naveenb2004.socks5.client.command.processor.UdpAssociateProcessor;
 import io.github.naveenb2004.socks5.client.config.SOCKS5ClientConfiguration;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
-import io.github.naveenb2004.socks5.client.service.CommandProcessService;
-import io.github.naveenb2004.socks5.client.service.MethodSelectionService;
+import io.github.naveenb2004.socks5.client.method.service.MethodSelectionService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -43,21 +49,38 @@ public final class SOCKS5Client {
         }
     }
 
-    public synchronized SOCKS5Response bootstrap(CMD command,
-                                                 InetSocketAddress destination) throws SOCKS5ClientException {
+    private synchronized SOCKS5Response bootstrap(CMD cmd,
+                                                  InetSocketAddress dst) throws SOCKS5ClientException {
         if (bootstrapped) throw new SOCKS5ClientException("Already bootstrapped");
         if (socket == null) throw new SOCKS5ClientException("Socket not initialized");
-        if (command == null) throw new SOCKS5ClientException("Command cannot be null");
-        if (destination == null) throw new SOCKS5ClientException("Destination cannot be null");
+        if (cmd == null) throw new SOCKS5ClientException("Command cannot be null");
+        if (dst == null) throw new SOCKS5ClientException("Destination cannot be null");
         try {
             new MethodSelectionService(socket, configuration.getSOCKS5Methods()).init();
-            SOCKS5Response response = new CommandProcessService(command, socket, destination).init();
+            CommandProcessor commandProcessor = switch (cmd) {
+                case CONNECT -> new ConnectProcessor(socket, dst);
+                case BIND -> new BindProcessor();
+                case UDP_ASSOCIATE -> new UdpAssociateProcessor();
+            };
+            SOCKS5Response response = commandProcessor.process();
             bootstrapped = true;
             return response;
         } catch (SOCKS5ClientException e) {
             destroy();
             throw e;
         }
+    }
+
+    public BindResponse bind(InetSocketAddress destination) throws SOCKS5ClientException {
+        return (BindResponse) bootstrap(CMD.BIND, destination);
+    }
+
+    public ConnectResponse connect(InetSocketAddress destination) throws SOCKS5ClientException {
+        return (ConnectResponse) bootstrap(CMD.CONNECT, destination);
+    }
+
+    public UdpAssociateResponse udpAssociate(InetSocketAddress destination) throws SOCKS5ClientException {
+        return (UdpAssociateResponse) bootstrap(CMD.UDP_ASSOCIATE, destination);
     }
 
     public synchronized void destroy() throws SOCKS5ClientException {

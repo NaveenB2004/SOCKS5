@@ -1,4 +1,4 @@
-package io.github.naveenb2004.socks5.client.service;
+package io.github.naveenb2004.socks5.client.method.service;
 
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 import io.github.naveenb2004.socks5.client.method.SOCKS5ClientMethod;
