@@ -23,7 +23,6 @@ public final class CommandProcessService {
     private CMD command;
     private ATYP addressType;
     private InetSocketAddress destination;
-    private CommandProcessor commandProcessor;
 
     public CommandProcessService(Socket clientSocket,
                                  SOCKS5Ruleset socks5Ruleset) {
@@ -114,7 +113,7 @@ public final class CommandProcessService {
     }
 
     private void redirectToProcessor() {
-        commandProcessor = switch (command) {
+        CommandProcessor commandProcessor = switch (command) {
             case CONNECT -> new ConnectProcessor();
             case BIND -> null;
             case UDP_ASSOCIATE -> null;
@@ -123,7 +122,7 @@ public final class CommandProcessService {
     }
 
     private void replyOnRuleFailer() throws IOException {
-        CommandProcessor.sendResponse(outputStream, REP.CONNECTION_NOT_ALLOWED_BY_RULESET,
+        CommandProcessor.sendResponse(REP.CONNECTION_NOT_ALLOWED_BY_RULESET,
                 ATYP.IP_V4_ADDRESS, InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), 0);
         throw new SOCKS5ServerException("SOCKS5 rules violation");
     }

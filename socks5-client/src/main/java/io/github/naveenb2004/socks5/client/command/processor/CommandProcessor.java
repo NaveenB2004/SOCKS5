@@ -6,27 +6,43 @@ import io.github.naveenb2004.socks5.client.command.SOCKS5Response;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.net.Socket;
 
-public interface CommandProcessor {
-    SOCKS5Response process();
+public abstract sealed class CommandProcessor
+        permits BindProcessor, ConnectProcessor, UdpAssociateProcessor {
+    protected final Socket socks5Server;
+    protected final CMD cmd;
+    protected final ATYP atyp;
+    protected final byte[] dstAddr;
+    protected final byte[] dstPort;
 
-    static void sendRequest(OutputStream outputStream,
-                            CMD command,
-                            ATYP addressType,
-                            InetSocketAddress destination) throws IOException {
+    protected CommandProcessor(Socket socks5Server,
+                               CMD cmd,
+                               ATYP atyp,
+                               byte[] dstAddr,
+                               byte[] dstPort) {
+        this.socks5Server = socks5Server;
+        this.cmd = cmd;
+        this.atyp = atyp;
+        this.dstAddr = dstAddr;
+        this.dstPort = dstPort;
+    }
+
+    public abstract SOCKS5Response process();
+
+    protected void sendRequest() throws IOException {
+        OutputStream outputStream = socks5Server.getOutputStream();
         outputStream.write(0x05);
-        outputStream.write(command.getValue());
+        outputStream.write(cmd.getValue());
         outputStream.write(0x00);
-        outputStream.write(addressType.getValue());
-        switch (addressType) {
-            case IP_V4_ADDRESS, IP_V6_ADDRESS -> outputStream.write(destination.getAddress().getAddress());
+        outputStream.write(atyp.getValue());
+        switch (atyp) {
+            case IP_V4_ADDRESS, IP_V6_ADDRESS -> outputStream.write(dstAddr);
             case DOMAINNAME -> {
-                outputStream.write(destination.getHostName().length());
-                outputStream.write(destination.getHostName().getBytes());
+                outputStream.write(dstAddr.length);
+                outputStream.write(dstAddr);
             }
         }
-        outputStream.write((destination.getPort() >>> 8) & 0xFF);
-        outputStream.write((destination.getPort() & 0xFF));
+        outputStream.write(dstPort);
     }
 }
