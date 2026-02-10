@@ -63,7 +63,7 @@
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <gpg.fingerprint>2564F9C4A2929FD30737C0B7E95B8A304E20F2AF</gpg.fingerprint>
+        <gpg.fingerprint>5BEACB09701C05927EA22BBAF086E7DB234FEDF9</gpg.fingerprint>
     </properties>
 
     <dependencies>
