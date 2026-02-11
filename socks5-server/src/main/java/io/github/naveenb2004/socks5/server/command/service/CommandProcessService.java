@@ -3,8 +3,10 @@ package io.github.naveenb2004.socks5.server.command.service;
 import io.github.naveenb2004.socks5.base.ATYP;
 import io.github.naveenb2004.socks5.base.CMD;
 import io.github.naveenb2004.socks5.base.REP;
+import io.github.naveenb2004.socks5.server.command.processor.BindProcessor;
 import io.github.naveenb2004.socks5.server.command.processor.CommandProcessor;
 import io.github.naveenb2004.socks5.server.command.processor.ConnectProcessor;
+import io.github.naveenb2004.socks5.server.command.processor.UdpAssociateProcessor;
 import io.github.naveenb2004.socks5.server.config.SOCKS5Ruleset;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
@@ -19,11 +21,11 @@ public final class CommandProcessService {
 
     private InputStream inputStream;
     private OutputStream outputStream;
+    private CommandProcessor commandProcessor;
 
     private CMD command;
     private ATYP addressType;
     private InetSocketAddress destination;
-    private CommandProcessor commandProcessor;
 
     public CommandProcessService(Socket clientSocket,
                                  SOCKS5Ruleset socks5Ruleset) {
@@ -52,31 +54,31 @@ public final class CommandProcessService {
         int rsv = inputStream.read();
         if (rsv != 0x00) throw new SOCKS5ServerException("Invalid rsv");
         addressType = ATYP.valueOf(inputStream.read());
-        switch (addressType) {
+        destination = switch (addressType) {
             case IP_V4_ADDRESS -> {
                 InetAddress addr = Inet4Address.getByAddress(inputStream.readNBytes(4));
                 int port = (inputStream.read() & 0xFF) << 8 | (inputStream.read() & 0xFF);
-                destination = new InetSocketAddress(addr, port);
+                yield new InetSocketAddress(addr, port);
             }
             case DOMAINNAME -> {
                 int len = inputStream.read();
                 String addr = new String(inputStream.readNBytes(len));
                 int port = (inputStream.read() & 0xFF) << 8 | (inputStream.read() & 0xFF);
-                destination = new InetSocketAddress(addr, port);
+                yield new InetSocketAddress(addr, port);
             }
             case IP_V6_ADDRESS -> {
                 InetAddress addr = Inet6Address.getByAddress(inputStream.readNBytes(16));
                 int port = (inputStream.read() & 0xFF) << 8 | (inputStream.read() & 0xFF);
-                destination = new InetSocketAddress(addr, port);
+                yield new InetSocketAddress(addr, port);
             }
-        }
+        };
     }
 
     private void buildProcessor() {
         commandProcessor = switch (command) {
-            case CONNECT -> new ConnectProcessor();
-            case BIND -> null;
-            case UDP_ASSOCIATE -> null;
+            case CONNECT -> new ConnectProcessor(clientSocket, addressType, destination);
+            case BIND -> new BindProcessor(clientSocket, addressType, destination);
+            case UDP_ASSOCIATE -> new UdpAssociateProcessor(clientSocket, addressType, destination);
         };
     }
 
