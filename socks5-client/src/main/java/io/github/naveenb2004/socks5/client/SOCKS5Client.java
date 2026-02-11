@@ -66,9 +66,9 @@ public final class SOCKS5Client {
             SOCKS5Response response = commandProcessor.process();
             bootstrapped = true;
             return response;
-        } catch (SOCKS5ClientException e) {
+        } catch (Exception e) {
             destroy();
-            throw e;
+            throw new SOCKS5ClientException(e);
         }
     }
 

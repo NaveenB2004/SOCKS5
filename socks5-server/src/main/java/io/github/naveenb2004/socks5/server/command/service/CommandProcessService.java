@@ -23,6 +23,7 @@ public final class CommandProcessService {
     private CMD command;
     private ATYP addressType;
     private InetSocketAddress destination;
+    private CommandProcessor commandProcessor;
 
     public CommandProcessService(Socket clientSocket,
                                  SOCKS5Ruleset socks5Ruleset) {
@@ -36,8 +37,9 @@ public final class CommandProcessService {
             outputStream = clientSocket.getOutputStream();
 
             consumeRequest();
+            buildProcessor();
             enforceRules();
-            redirectToProcessor();
+            commandProcessor.process();
         } catch (Exception e) {
             throw new SOCKS5ServerException(e);
         }
@@ -68,6 +70,14 @@ public final class CommandProcessService {
                 destination = new InetSocketAddress(addr, port);
             }
         }
+    }
+
+    private void buildProcessor() {
+        commandProcessor = switch (command) {
+            case CONNECT -> new ConnectProcessor();
+            case BIND -> null;
+            case UDP_ASSOCIATE -> null;
+        };
     }
 
     private void enforceRules() throws IOException {
@@ -112,18 +122,8 @@ public final class CommandProcessService {
         }
     }
 
-    private void redirectToProcessor() {
-        CommandProcessor commandProcessor = switch (command) {
-            case CONNECT -> new ConnectProcessor();
-            case BIND -> null;
-            case UDP_ASSOCIATE -> null;
-        };
-        commandProcessor.process();
-    }
-
     private void replyOnRuleFailer() throws IOException {
-        CommandProcessor.sendResponse(REP.CONNECTION_NOT_ALLOWED_BY_RULESET,
-                ATYP.IP_V4_ADDRESS, InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), 0);
+        commandProcessor.sendResponse(REP.CONNECTION_NOT_ALLOWED_BY_RULESET);
         throw new SOCKS5ServerException("SOCKS5 rules violation");
     }
 }

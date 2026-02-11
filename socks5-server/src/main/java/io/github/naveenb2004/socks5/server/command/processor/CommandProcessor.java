@@ -20,7 +20,13 @@ public abstract sealed class CommandProcessor
 
     public abstract void process();
 
-    protected void sendResponse(REP rep) throws IOException {
+    public void sendResponse(REP rep) throws IOException {
+        if (rep != REP.SUCCEEDED) {
+            atyp = ATYP.IP_V4_ADDRESS;
+            bndAddr = new byte[]{0, 0, 0, 0};
+            bndPort = new byte[]{0, 0};
+        }
+
         OutputStream outputStream = socks5Client.getOutputStream();
         outputStream.write(0x05);
         outputStream.write(rep.getValue());
