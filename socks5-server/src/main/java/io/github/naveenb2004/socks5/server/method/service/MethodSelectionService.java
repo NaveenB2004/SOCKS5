@@ -58,6 +58,8 @@ public final class MethodSelectionService {
             socket.close();
             throw new SOCKS5ServerException("No acceptable SOCKS5 method");
         }
+        outputStream.write(0x05);
+        outputStream.write(socks5ServerMethod.getMethodId());
     }
 
     private void processMethodSubNegotiation() {

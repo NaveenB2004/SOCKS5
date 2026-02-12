@@ -7,6 +7,7 @@ import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -39,10 +40,12 @@ public final class ConnectProcessor extends CommandProcessor {
     }
 
     private void initRemote() throws IOException {
-        try (Socket dstSocket = new Socket()) {
+        try {
+            this.dstSocket = new Socket();
             dstSocket.connect(dst);
-            this.dstSocket = dstSocket;
+
             super.bndSocketAddr = (InetSocketAddress) dstSocket.getLocalSocketAddress();
+            super.bndAtyp = super.bndSocketAddr.getAddress() instanceof Inet4Address ? ATYP.IP_V4_ADDRESS : ATYP.IP_V6_ADDRESS;
         } catch (UnknownHostException e) {
             super.sendResponse(REP.HOST_UNREACHABLE);
             throw e;
@@ -52,22 +55,23 @@ public final class ConnectProcessor extends CommandProcessor {
         }
     }
 
-    private void wireStream(InputStream srcIn,
-                            OutputStream dstOut) {
+    private void wireStream(InputStream inputStream,
+                            OutputStream outputStream) {
         try {
             int bytesRead;
             byte[] buffer = new byte[1024];
-            while ((bytesRead = srcIn.read(buffer)) != -1) {
-                dstOut.write(buffer, 0, bytesRead);
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
             }
         } catch (IOException e) {
+            throw new SOCKS5ServerException(e);
+        } finally {
             try {
                 if (!super.socks5Client.isClosed()) super.socks5Client.close();
                 if (!dstSocket.isClosed()) dstSocket.close();
             } catch (IOException ex) {
                 throw new SOCKS5ServerException(ex);
             }
-            throw new SOCKS5ServerException(e);
         }
     }
 }

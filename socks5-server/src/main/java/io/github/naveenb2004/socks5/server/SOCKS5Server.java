@@ -1,8 +1,8 @@
 package io.github.naveenb2004.socks5.server;
 
+import io.github.naveenb2004.socks5.server.command.service.CommandProcessService;
 import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
-import io.github.naveenb2004.socks5.server.command.service.CommandProcessService;
 import io.github.naveenb2004.socks5.server.method.service.MethodSelectionService;
 
 import java.io.IOException;
@@ -109,5 +109,12 @@ public final class SOCKS5Server {
             if (configuration == null) throw new SOCKS5ServerException("Configuration not set");
             return new SOCKS5Server(configuration);
         }
+    }
+
+    static void main() {
+        var config = SOCKS5ServerConfiguration.builder().build();
+        var proxy = SOCKS5Server.builder().configuration(config).build();
+        proxy.init();
+        proxy.bootstrap();
     }
 }

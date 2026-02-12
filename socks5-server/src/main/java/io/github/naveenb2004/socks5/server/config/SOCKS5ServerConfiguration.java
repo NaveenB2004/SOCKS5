@@ -71,7 +71,7 @@ public final class SOCKS5ServerConfiguration {
     }
 
     public static final class SOCKS5ServerConfigurationBuilder {
-        private int port;
+        private int port = 1080;
         private int backlog;
         private InetAddress bindAddress;
         private int maxClients = 100;

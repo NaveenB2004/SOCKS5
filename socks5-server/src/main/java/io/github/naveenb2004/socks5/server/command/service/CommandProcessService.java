@@ -83,6 +83,8 @@ public final class CommandProcessService {
     }
 
     private void enforceRules() throws IOException {
+        if (socks5Ruleset == null) return;
+
         switch (socks5Ruleset.getCommandsState()) {
             case ALLOW -> {
                 if (!socks5Ruleset.getCommands().contains(command)) replyOnRuleFailer();
