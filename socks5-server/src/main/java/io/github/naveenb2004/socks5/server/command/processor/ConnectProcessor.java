@@ -27,13 +27,24 @@ public final class ConnectProcessor extends CommandProcessor {
             initRemote();
             super.sendResponse(REP.SUCCEEDED);
 
+            System.out.println(
+                    "From: " + socks5Client.getInetAddress() + " : " + socks5Client.getPort() + " | " +
+                            "To: " + dstSocket.getInetAddress() + " : " + dstSocket.getPort()
+                              );
+
             InputStream srcIn = super.socks5Client.getInputStream();
             OutputStream srcOut = super.socks5Client.getOutputStream();
             InputStream dstIn = dstSocket.getInputStream();
             OutputStream dstOut = dstSocket.getOutputStream();
 
+            Thread.ofVirtual().start(() -> {
+                try {
+                    wireStream(dstIn, srcOut);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
             wireStream(srcIn, dstOut);
-            Thread.ofVirtual().start(() -> wireStream(dstIn, srcOut));
         } catch (Exception e) {
             throw new SOCKS5ServerException(e);
         }
@@ -56,22 +67,17 @@ public final class ConnectProcessor extends CommandProcessor {
     }
 
     private void wireStream(InputStream inputStream,
-                            OutputStream outputStream) {
+                            OutputStream outputStream) throws IOException {
         try {
-            int bytesRead;
-            byte[] buffer = new byte[1024];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+            int b;
+            byte[] buffer = new byte[10_240];
+            while ((b = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, b);
+                outputStream.flush();
             }
+            outputStream.close();
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
-        } finally {
-            try {
-                if (!super.socks5Client.isClosed()) super.socks5Client.close();
-                if (!dstSocket.isClosed()) dstSocket.close();
-            } catch (IOException ex) {
-                throw new SOCKS5ServerException(ex);
-            }
         }
     }
 }
