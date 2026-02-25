@@ -25,7 +25,7 @@ public abstract sealed class CommandProcessor
         this.dst = dst;
     }
 
-    public abstract void process();
+    public abstract void process() throws IOException;
 
     public void sendResponse(REP rep) throws IOException {
         OutputStream outputStream = socks5Client.getOutputStream();

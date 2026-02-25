@@ -1,5 +1,6 @@
 package io.github.naveenb2004.socks5.base;
 
 public final class SOCKS5Properties {
-    public static int UDP_RAW_PACKET_SIZE = 1024;
+    public static int UDP_RAW_PACKET_SIZE = 1_024;
+    public static int INTERNAL_BUFFER_SIZE = 10_240;
 }

@@ -62,6 +62,7 @@ public final class SOCKS5Server {
                 clientExecutor.execute(() -> {
                     try {
                         Socket clientSocket = serverSocket.accept();
+                        clientSocket.setTcpNoDelay(true);
                         new MethodSelectionService(clientSocket, configuration.getSocks5Methods()).init();
                         new CommandProcessService(clientSocket, configuration.getSocks5Ruleset()).init();
                     } catch (IOException | SOCKS5ServerException e) {
@@ -112,7 +113,7 @@ public final class SOCKS5Server {
     }
 
     static void main() {
-        var config = SOCKS5ServerConfiguration.builder().build();
+        var config = SOCKS5ServerConfiguration.builder().threadFactory(Thread.ofPlatform().factory()).build();
         var proxy = SOCKS5Server.builder().configuration(config).build();
         proxy.init();
         proxy.bootstrap();
