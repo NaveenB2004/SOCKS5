@@ -1,121 +1,26 @@
+/*
+ * Copyright (c) 2026 Naveen N. Balasooriya
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package io.github.naveenb2004.socks5.server;
 
-import io.github.naveenb2004.socks5.server.command.service.CommandProcessService;
-import io.github.naveenb2004.socks5.server.config.SOCKS5ServerConfiguration;
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
-import io.github.naveenb2004.socks5.server.method.service.MethodSelectionService;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 public final class SOCKS5Server {
-    private final SOCKS5ServerConfiguration configuration;
-
-    private ServerSocket serverSocket;
-    private Thread serverThread;
-    private ExecutorService clientExecutor;
-    private boolean bootstrapped;
-
-    private SOCKS5Server(SOCKS5ServerConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    public SOCKS5ServerConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    public ServerSocket getServerSocket() {
-        return serverSocket;
-    }
-
-    public synchronized void init() {
-        if (serverSocket != null) throw new SOCKS5ServerException("Server already initialized");
-        try {
-            if (configuration.getBindAddress() == null) {
-                serverSocket = new ServerSocket(
-                        configuration.getPort(),
-                        configuration.getBacklog());
-            } else {
-                serverSocket = new ServerSocket(
-                        configuration.getPort(),
-                        configuration.getBacklog(),
-                        configuration.getBindAddress());
-            }
-            clientExecutor = Executors.newFixedThreadPool(
-                    configuration.getMaxClients(),
-                    configuration.getClientThreadFactory());
-            bootstrapped = false;
-        } catch (IOException e) {
-            throw new SOCKS5ServerException(e);
-        }
-    }
-
-    public synchronized void bootstrap() {
-        if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
-        if (bootstrapped) throw new SOCKS5ServerException("Server already bootstrapped");
-        serverThread = Thread.ofPlatform().factory().newThread(() -> {
-            while (!serverSocket.isClosed()) {
-                clientExecutor.execute(() -> {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        clientSocket.setTcpNoDelay(true);
-                        new MethodSelectionService(clientSocket, configuration.getSocks5Methods()).init();
-                        new CommandProcessService(clientSocket, configuration.getSocks5Ruleset()).init();
-                    } catch (IOException | SOCKS5ServerException e) {
-                        throw new SOCKS5ServerException(e);
-                    }
-                });
-            }
-        });
-        serverThread.start();
-        bootstrapped = true;
-    }
-
-    public synchronized void destroy() {
-        if (serverSocket == null) throw new SOCKS5ServerException("Server not initialized");
-        try {
-            serverSocket.close();
-            if (serverThread.isAlive()) serverThread.interrupt();
-            clientExecutor.shutdown();
-            if (!clientExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                clientExecutor.shutdownNow();
-            }
-            serverSocket = null;
-            bootstrapped = false;
-        } catch (IOException | InterruptedException e) {
-            throw new SOCKS5ServerException(e);
-        }
-    }
-
-    public static SOCKS5ServerBuilder builder() {
-        return new SOCKS5ServerBuilder();
-    }
-
-    public static final class SOCKS5ServerBuilder {
-        private SOCKS5ServerConfiguration configuration;
-
-        private SOCKS5ServerBuilder() {
-        }
-
-        public SOCKS5ServerBuilder configuration(SOCKS5ServerConfiguration configuration) {
-            this.configuration = configuration;
-            return this;
-        }
-
-        public SOCKS5Server build() throws SOCKS5ServerException {
-            if (configuration == null) throw new SOCKS5ServerException("Configuration not set");
-            return new SOCKS5Server(configuration);
-        }
-    }
-
-    static void main() {
-        var config = SOCKS5ServerConfiguration.builder().threadFactory(Thread.ofPlatform().factory()).build();
-        var proxy = SOCKS5Server.builder().configuration(config).build();
-        proxy.init();
-        proxy.bootstrap();
-    }
 }

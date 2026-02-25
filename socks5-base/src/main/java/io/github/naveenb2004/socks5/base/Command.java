@@ -20,25 +20,29 @@
  * SOFTWARE.
  */
 
-package io.github.naveenb2004.socks5.client.exception;
+package io.github.naveenb2004.socks5.base;
 
-import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
+public enum Command {
+    CONNECT(0x01),
+    BIND(0x02),
+    UDP_ASSOCIATE(0x03);
 
-public final class SOCKS5ClientException extends SOCKS5Exception {
-    public SOCKS5ClientException() {
-        super();
+    private final int value;
+
+    Command(final int value) {
+        this.value = value;
     }
 
-    public SOCKS5ClientException(String message) {
-        super(message);
+    public int getValue() {
+        return value;
     }
 
-    public SOCKS5ClientException(String message,
-                                 Throwable cause) {
-        super(message, cause);
-    }
-
-    public SOCKS5ClientException(Throwable cause) {
-        super(cause);
+    public static Command fromValue(final int value) {
+        return switch (value) {
+            case 0x01 -> CONNECT;
+            case 0x02 -> BIND;
+            case 0x03 -> UDP_ASSOCIATE;
+            default -> null;
+        };
     }
 }

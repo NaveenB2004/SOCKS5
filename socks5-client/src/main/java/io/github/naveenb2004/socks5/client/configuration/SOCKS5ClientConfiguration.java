@@ -20,25 +20,30 @@
  * SOFTWARE.
  */
 
-package io.github.naveenb2004.socks5.client.exception;
+package io.github.naveenb2004.socks5.client.configuration;
 
-import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
+import io.github.naveenb2004.socks5.base.configuration.SOCKS5Configuration;
 
-public final class SOCKS5ClientException extends SOCKS5Exception {
-    public SOCKS5ClientException() {
-        super();
+public final class SOCKS5ClientConfiguration extends SOCKS5Configuration {
+    private SOCKS5ClientConfiguration(final int internalBufferSize) {
+        super(internalBufferSize);
     }
 
-    public SOCKS5ClientException(String message) {
-        super(message);
+    public static SOCKS5ClientConfigurationBuilder builder() {
+        return new SOCKS5ClientConfigurationBuilder();
     }
 
-    public SOCKS5ClientException(String message,
-                                 Throwable cause) {
-        super(message, cause);
-    }
+    public static class SOCKS5ClientConfigurationBuilder extends SOCKS5ConfigurationBuilder {
 
-    public SOCKS5ClientException(Throwable cause) {
-        super(cause);
+        private SOCKS5ClientConfigurationBuilder() {
+            super();
+        }
+
+        @Override
+        public SOCKS5Configuration build() {
+            return new SOCKS5ClientConfiguration(
+                    super.internalBufferSize
+            );
+        }
     }
 }
