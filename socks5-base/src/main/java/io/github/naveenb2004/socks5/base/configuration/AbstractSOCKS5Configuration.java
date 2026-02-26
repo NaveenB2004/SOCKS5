@@ -7,12 +7,10 @@
 
 package io.github.naveenb2004.socks5.base.configuration;
 
-public abstract class SOCKS5Configuration {
-    public static final int VERSION = 0x05;
-
+public abstract class AbstractSOCKS5Configuration {
     private final int internalBufferSize;
 
-    protected SOCKS5Configuration(final int internalBufferSize) {
+    protected AbstractSOCKS5Configuration(final int internalBufferSize) {
         this.internalBufferSize = internalBufferSize;
     }
 
@@ -31,6 +29,6 @@ public abstract class SOCKS5Configuration {
             return this;
         }
 
-        public abstract SOCKS5Configuration build();
+        public abstract AbstractSOCKS5Configuration build();
     }
 }

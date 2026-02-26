@@ -7,21 +7,21 @@
 
 package io.github.naveenb2004.socks5.base.exception;
 
-public abstract class SOCKS5Exception extends RuntimeException {
-    public SOCKS5Exception() {
+public abstract class AbstractSOCKS5Exception extends RuntimeException {
+    public AbstractSOCKS5Exception() {
         super();
     }
 
-    public SOCKS5Exception(String message) {
+    public AbstractSOCKS5Exception(String message) {
         super(message);
     }
 
-    public SOCKS5Exception(String message,
-                           Throwable cause) {
+    public AbstractSOCKS5Exception(String message,
+                                   Throwable cause) {
         super(message, cause);
     }
 
-    public SOCKS5Exception(Throwable cause) {
+    public AbstractSOCKS5Exception(Throwable cause) {
         super(cause);
     }
 }

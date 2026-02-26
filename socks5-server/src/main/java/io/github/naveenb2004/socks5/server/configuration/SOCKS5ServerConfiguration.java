@@ -7,9 +7,9 @@
 
 package io.github.naveenb2004.socks5.server.configuration;
 
-import io.github.naveenb2004.socks5.base.configuration.SOCKS5Configuration;
+import io.github.naveenb2004.socks5.base.configuration.AbstractSOCKS5Configuration;
 
-public final class SOCKS5ServerConfiguration extends SOCKS5Configuration {
+public final class SOCKS5ServerConfiguration extends AbstractSOCKS5Configuration {
     private SOCKS5ServerConfiguration(final int internalBufferSize) {
         super(internalBufferSize);
     }

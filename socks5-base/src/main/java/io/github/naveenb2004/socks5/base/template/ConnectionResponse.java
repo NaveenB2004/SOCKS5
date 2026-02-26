@@ -10,9 +10,8 @@ package io.github.naveenb2004.socks5.base.template;
 import io.github.naveenb2004.socks5.base.AddressType;
 import io.github.naveenb2004.socks5.base.Reply;
 
-import java.net.InetSocketAddress;
-
 public record ConnectionResponse(Reply reply,
                                  AddressType addressType,
-                                 InetSocketAddress bindInfo) {
+                                 byte[] bindAddress,
+                                 int bindPort) {
 }

@@ -5,7 +5,8 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-package io.github.naveenb2004.socks5.base.template;
+package io.github.naveenb2004.socks5.client.authentication;
 
-public record AuthSelectionRequest(int[] authMethodIds) {
+public abstract class AbstractClientAuthentication {
+    public abstract int getAuthMethodId();
 }
