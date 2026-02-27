@@ -8,10 +8,10 @@
 package io.github.naveenb2004.socks5.base.template;
 
 import io.github.naveenb2004.socks5.base.AddressType;
-import io.github.naveenb2004.socks5.base.Reply;
+import io.github.naveenb2004.socks5.base.Command;
 
-public record ConnectionResponse(Reply reply,
-                                 AddressType addressType,
-                                 byte[] bindAddress,
-                                 int bindPort) {
+public record SocksRequest(Command command,
+                           AddressType addressType,
+                           byte[] destAddress,
+                           int destPort) {
 }

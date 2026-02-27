@@ -9,14 +9,14 @@ package io.github.naveenb2004.socks5.server.service;
 
 import io.github.naveenb2004.socks5.base.AddressType;
 import io.github.naveenb2004.socks5.base.Command;
-import io.github.naveenb2004.socks5.base.template.ConnectionRequest;
+import io.github.naveenb2004.socks5.base.template.SocksRequest;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public final class ConnectionService {
-    public static ConnectionRequest receiveConnReq(final InputStream inputStream) throws IOException {
+public final class SocksRespService {
+    public static SocksRequest receiveConnReq(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {
             if (version == -1) throw new SOCKS5ServerException("Connection closed");
@@ -66,6 +66,6 @@ public final class ConnectionService {
         }
         int destPort = ((destPortBytes[0] & 0xff) << 16) | ((destPortBytes[1] & 0xff) << 8);
 
-        return new ConnectionRequest(command, addressType, destAddress, destPort);
+        return new SocksRequest(command, addressType, destAddress, destPort);
     }
 }
