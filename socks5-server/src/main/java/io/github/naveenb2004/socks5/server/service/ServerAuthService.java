@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public final class AuthService {
+public final class ServerAuthService {
     public static AuthRequest receiveAuthSelectionRequest(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {

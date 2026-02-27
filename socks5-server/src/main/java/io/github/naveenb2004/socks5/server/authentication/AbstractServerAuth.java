@@ -5,8 +5,8 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-package io.github.naveenb2004.socks5.client.authentication;
+package io.github.naveenb2004.socks5.server.authentication;
 
-public abstract class AbstractClientAuthentication {
+public abstract class AbstractServerAuth {
     public abstract int getAuthMethodId();
 }

@@ -7,7 +7,7 @@
 
 package io.github.naveenb2004.socks5.server.authentication;
 
-public final class UsernamePasswordAuthentication extends AbstractServerAuthentication {
+public final class UsernamePasswordAuth extends AbstractServerAuth {
     @Override
     public int getAuthMethodId() {
         return 0x02;
