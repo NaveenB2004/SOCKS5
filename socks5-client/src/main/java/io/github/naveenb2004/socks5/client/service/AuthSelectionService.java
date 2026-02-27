@@ -7,8 +7,8 @@
 
 package io.github.naveenb2004.socks5.client.service;
 
-import io.github.naveenb2004.socks5.base.template.AuthSelectionRequest;
-import io.github.naveenb2004.socks5.base.template.AuthSelectionResponse;
+import io.github.naveenb2004.socks5.base.template.AuthRequest;
+import io.github.naveenb2004.socks5.base.template.AuthResponse;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 
 import java.io.IOException;
@@ -17,15 +17,15 @@ import java.io.OutputStream;
 
 public final class AuthSelectionService {
     public static void sendAuthSelectionReq(final OutputStream outputStream,
-                                            final AuthSelectionRequest authSelectionRequest) throws IOException {
+                                            final AuthRequest authRequest) throws IOException {
         outputStream.write(0x05);
-        outputStream.write(authSelectionRequest.authMethodIds().length);
-        for (int authMethod : authSelectionRequest.authMethodIds()) {
+        outputStream.write(authRequest.authMethodIds().length);
+        for (int authMethod : authRequest.authMethodIds()) {
             outputStream.write(authMethod);
         }
     }
 
-    public static AuthSelectionResponse receiveAuthSelectionResp(final InputStream inputStream) throws IOException {
+    public static AuthResponse receiveAuthSelectionResp(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {
             if (version == -1) throw new SOCKS5ClientException("Connection closed");
@@ -35,6 +35,6 @@ public final class AuthSelectionService {
         int methodId = inputStream.read();
         if (methodId == -1) throw new SOCKS5ClientException("Connection closed");
 
-        return new AuthSelectionResponse(methodId);
+        return new AuthResponse(methodId);
     }
 }

@@ -7,5 +7,5 @@
 
 package io.github.naveenb2004.socks5.base.template;
 
-public record AuthSelectionRequest(int[] authMethodIds) {
+public record AuthResponse(int authMethodId) {
 }
