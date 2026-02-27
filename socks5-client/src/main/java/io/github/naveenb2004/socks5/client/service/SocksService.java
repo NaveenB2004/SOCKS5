@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public final class SocksReqService {
+public final class SocksService {
     public static void sendConnReq(final OutputStream outputStream,
                                    final SocksRequest socksRequest) throws IOException {
         outputStream.write(0x05); // VER

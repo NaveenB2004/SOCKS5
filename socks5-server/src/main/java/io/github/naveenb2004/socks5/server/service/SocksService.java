@@ -15,7 +15,7 @@ import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public final class SocksRespService {
+public final class SocksService {
     public static SocksRequest receiveConnReq(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {
