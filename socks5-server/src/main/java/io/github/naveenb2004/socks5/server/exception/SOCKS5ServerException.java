@@ -7,9 +7,9 @@
 
 package io.github.naveenb2004.socks5.server.exception;
 
-import io.github.naveenb2004.socks5.base.exception.AbstractSOCKS5Exception;
+import io.github.naveenb2004.socks5.base.exception.SOCKS5Exception;
 
-public final class SOCKS5ServerException extends AbstractSOCKS5Exception {
+public final class SOCKS5ServerException extends SOCKS5Exception {
     public SOCKS5ServerException() {
         super();
     }
