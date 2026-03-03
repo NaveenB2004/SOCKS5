@@ -19,11 +19,11 @@ public abstract class AbstractSOCKS5Configuration {
         this.connectionTimeout = connectionTimeout;
     }
 
-    public int getInternalBufferSize() {
+    public final int getInternalBufferSize() {
         return internalBufferSize;
     }
 
-    public int getConnectionTimeout() {
+    public final int getConnectionTimeout() {
         return connectionTimeout;
     }
 
@@ -34,13 +34,13 @@ public abstract class AbstractSOCKS5Configuration {
         protected SOCKS5ConfigurationBuilder() {
         }
 
-        public SOCKS5ConfigurationBuilder internalBufferSize(final int internalBufferSize) {
+        public final SOCKS5ConfigurationBuilder internalBufferSize(final int internalBufferSize) {
             if (internalBufferSize <= 0) throw new SOCKS5Exception("Config error: internalBufferSize must be positive");
             this.internalBufferSize = internalBufferSize;
             return this;
         }
 
-        public SOCKS5ConfigurationBuilder connectionTimeout(final int connectionTimeout) {
+        public final SOCKS5ConfigurationBuilder connectionTimeout(final int connectionTimeout) {
             this.connectionTimeout = connectionTimeout;
             return this;
         }

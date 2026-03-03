@@ -10,15 +10,16 @@ package io.github.naveenb2004.socks5.client.configuration;
 import io.github.naveenb2004.socks5.base.configuration.AbstractSOCKS5Configuration;
 
 public final class SOCKS5ClientConfig extends AbstractSOCKS5Configuration {
-    private SOCKS5ClientConfig(final int internalBufferSize) {
-        super(internalBufferSize);
+    private SOCKS5ClientConfig(final int internalBufferSize,
+                               final int connectionTimeout) {
+        super(internalBufferSize, connectionTimeout);
     }
 
     public static SOCKS5ClientConfigurationBuilder builder() {
         return new SOCKS5ClientConfigurationBuilder();
     }
 
-    public static class SOCKS5ClientConfigurationBuilder extends SOCKS5ConfigurationBuilder {
+    public static final class SOCKS5ClientConfigurationBuilder extends SOCKS5ConfigurationBuilder {
 
         private SOCKS5ClientConfigurationBuilder() {
             super();
@@ -27,7 +28,8 @@ public final class SOCKS5ClientConfig extends AbstractSOCKS5Configuration {
         @Override
         public AbstractSOCKS5Configuration build() {
             return new SOCKS5ClientConfig(
-                    super.internalBufferSize
+                    super.internalBufferSize,
+                    super.connectionTimeout
             );
         }
     }

@@ -42,7 +42,7 @@ public final class SOCKS5Server {
                 while (!serverSocket.isClosed()) {
                     try {
                         Socket clientSocket = serverSocket.accept();
-                        ClientService clientService = new ClientService(clientSocket);
+                        ClientService clientService = new ClientService(clientSocket, config);
                         clientExecutor.execute(clientService);
                     } catch (IOException e) {
                         throw new SOCKS5ServerException(e);
@@ -65,7 +65,7 @@ public final class SOCKS5Server {
         return new SOCKS5ServerBuilder();
     }
 
-    public static class SOCKS5ServerBuilder {
+    public static final class SOCKS5ServerBuilder {
         private SOCKS5ServerConfig config;
 
         private SOCKS5ServerBuilder() {
