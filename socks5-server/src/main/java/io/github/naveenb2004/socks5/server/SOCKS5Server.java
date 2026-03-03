@@ -56,9 +56,9 @@ public final class SOCKS5Server {
 
     public synchronized void stop() throws IOException {
         if (!initialized) throw new SOCKS5ServerException("Server already stopped");
-        serverSocket.close();
-        clientExecutor.shutdown();
-        // TODO impl
+        if (!serverSocket.isClosed()) serverSocket.close();
+        if (!clientExecutor.isShutdown()) clientExecutor.shutdownNow();
+        if (serverThread.isAlive()) serverThread.interrupt();
     }
 
     public static SOCKS5ServerBuilder builder() {
