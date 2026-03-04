@@ -7,8 +7,6 @@
 
 package io.github.naveenb2004.socks5.server.authentication;
 
-import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -20,6 +18,6 @@ public final class NoAuth extends AbstractServerAuth {
 
     @Override
     public void authenticate(InputStream clientInputStream,
-                             OutputStream clientOutputStream) throws SOCKS5ServerException {
+                             OutputStream clientOutputStream) {
     }
 }
