@@ -12,14 +12,15 @@ import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 public final class UsernamePasswordAuth extends AbstractClientAuth {
-    private final String username;
+    private final byte[] username;
     private final byte[] password;
 
     public UsernamePasswordAuth(final String username,
                                 final byte[] password) {
-        this.username = username;
+        this.username = username.getBytes(StandardCharsets.UTF_8);
         this.password = password;
     }
 
@@ -32,8 +33,8 @@ public final class UsernamePasswordAuth extends AbstractClientAuth {
     public void authenticate(InputStream serverInputStream,
                              OutputStream serverOutputStream) throws IOException, SOCKS5ClientException {
         serverOutputStream.write(0x01);
-        serverOutputStream.write(username.length());
-        serverOutputStream.write(username.getBytes());
+        serverOutputStream.write(username.length);
+        serverOutputStream.write(username);
         serverOutputStream.write(password.length);
         serverOutputStream.write(password);
         serverOutputStream.flush();

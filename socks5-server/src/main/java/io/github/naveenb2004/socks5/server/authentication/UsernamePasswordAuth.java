@@ -22,7 +22,7 @@ import java.util.Map;
 public final class UsernamePasswordAuth extends AbstractServerAuth {
     private static final Logger LOGGER = LoggerFactory.getLogger(UsernamePasswordAuth.class);
 
-    private final Map<String, byte[]> users = new HashMap<>(1, 1);
+    private final Map<byte[], byte[]> users = new HashMap<>(1, 1);
 
     public UsernamePasswordAuth() {
     }
@@ -33,10 +33,11 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         if (username.length() > 255 || password.length > 255) {
             throw new SOCKS5ServerException("Username/Password cannot be longer than 255 characters");
         }
-        if (users.containsKey(username)) {
+        byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
+        if (users.containsKey(usernameBytes)) {
             LOGGER.atWarn().log("User with username '{}' replaced with new password", username);
         }
-        users.put(username, password);
+        users.put(usernameBytes, password);
         return this;
     }
 
@@ -57,13 +58,12 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         int usernameLength = clientInputStream.read();
         if (usernameLength == -1) throw new SOCKS5ServerException("Connection closed");
 
-        byte[] usernameBytes = new byte[usernameLength];
-        int fetchedUsernameLength = clientInputStream.read(usernameBytes);
+        byte[] username = new byte[usernameLength];
+        int fetchedUsernameLength = clientInputStream.read(username);
         if (fetchedUsernameLength != usernameLength) {
             if (fetchedUsernameLength == -1) throw new SOCKS5ServerException("Connection closed");
             throw new SOCKS5ServerException("Error while fetching username");
         }
-        String username = new String(usernameBytes, StandardCharsets.UTF_8);
 
         int passwordLength = clientInputStream.read();
         if (passwordLength == -1) throw new SOCKS5ServerException("Connection closed");
@@ -79,14 +79,12 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         if (targetPassword == null) {
             clientOutputStream.write(0x01);
             clientOutputStream.write(0x01);
-            LOGGER.atDebug().log("User with username '{}' not found", username);
             throw new SOCKS5ServerException("User not found");
         }
 
         if (!Arrays.equals(password, targetPassword)) {
             clientOutputStream.write(0x01);
             clientOutputStream.write(0x02);
-            LOGGER.atDebug().log("User with username '{}' authentication failed (invalid password)", username);
             throw new SOCKS5ServerException("User authentication failed (invalid password)");
         }
 
