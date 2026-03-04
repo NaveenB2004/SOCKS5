@@ -22,13 +22,13 @@ import java.util.Map;
 public final class UsernamePasswordAuth extends AbstractServerAuth {
     private static final Logger LOGGER = LoggerFactory.getLogger(UsernamePasswordAuth.class);
 
-    private final Map<String, char[]> users = new HashMap<>(1, 1);
+    private final Map<String, byte[]> users = new HashMap<>(1, 1);
 
     public UsernamePasswordAuth() {
     }
 
-    public void addUser(String username,
-                        char[] password) {
+    public UsernamePasswordAuth addUser(final String username,
+                                        final byte[] password) {
         if (username == null || password == null) throw new SOCKS5ServerException("Username/Password cannot be null");
         if (username.length() > 255 || password.length > 255) {
             throw new SOCKS5ServerException("Username/Password cannot be longer than 255 characters");
@@ -37,6 +37,7 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
             LOGGER.atWarn().log("User with username '{}' replaced with new password", username);
         }
         users.put(username, password);
+        return this;
     }
 
     @Override
@@ -50,7 +51,7 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         int version = clientInputStream.read();
         if (version != 0x01) {
             if (version == -1) throw new SOCKS5ServerException("Connection closed");
-            throw new SOCKS5ServerException("Invalid username password authentication version");
+            throw new SOCKS5ServerException("Invalid username password authentication version from client");
         }
 
         int usernameLength = clientInputStream.read();
@@ -67,16 +68,14 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         int passwordLength = clientInputStream.read();
         if (passwordLength == -1) throw new SOCKS5ServerException("Connection closed");
 
-        byte[] passwordBytes = new byte[passwordLength];
-        int fetchedPasswordLength = clientInputStream.read(passwordBytes);
+        byte[] password = new byte[passwordLength];
+        int fetchedPasswordLength = clientInputStream.read(password);
         if (fetchedPasswordLength != passwordLength) {
             if (fetchedPasswordLength == -1) throw new SOCKS5ServerException("Connection closed");
             throw new SOCKS5ServerException("Error while fetching password");
         }
-        char[] password = new char[passwordLength];
-        for (int i = 0; i < passwordLength; i++) password[i] = (char) passwordBytes[i];
 
-        char[] targetPassword = users.get(username);
+        byte[] targetPassword = users.get(username);
         if (targetPassword == null) {
             clientOutputStream.write(0x01);
             clientOutputStream.write(0x01);

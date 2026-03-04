@@ -11,6 +11,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class NoAuth extends AbstractServerAuth {
+    public NoAuth() {
+    }
+
     @Override
     public int getAuthMethodId() {
         return 0x00;

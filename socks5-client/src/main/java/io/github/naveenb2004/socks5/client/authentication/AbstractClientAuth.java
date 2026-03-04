@@ -7,6 +7,15 @@
 
 package io.github.naveenb2004.socks5.client.authentication;
 
+import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 public abstract class AbstractClientAuth {
     public abstract int getAuthMethodId();
+
+    public abstract void authenticate(final InputStream serverInputStream,
+                                      final OutputStream serverOutputStream) throws IOException, SOCKS5ClientException;
 }
