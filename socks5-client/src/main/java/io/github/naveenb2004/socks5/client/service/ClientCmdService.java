@@ -9,30 +9,30 @@ package io.github.naveenb2004.socks5.client.service;
 
 import io.github.naveenb2004.socks5.base.AddressType;
 import io.github.naveenb2004.socks5.base.Reply;
-import io.github.naveenb2004.socks5.base.template.SocksRequest;
-import io.github.naveenb2004.socks5.base.template.SocksResponse;
+import io.github.naveenb2004.socks5.base.template.CmdRequest;
+import io.github.naveenb2004.socks5.base.template.CmdResponse;
 import io.github.naveenb2004.socks5.client.exception.SOCKS5ClientException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public final class SocksService {
+public final class ClientCmdService {
     public static void sendConnReq(final OutputStream outputStream,
-                                   final SocksRequest socksRequest) throws IOException {
+                                   final CmdRequest cmdRequest) throws IOException {
         outputStream.write(0x05); // VER
-        outputStream.write(socksRequest.command().getValue()); // CMD
+        outputStream.write(cmdRequest.command().getValue()); // CMD
         outputStream.write(0x00); // RSV
-        outputStream.write(socksRequest.addressType().getValue()); // ATYP
-        if (socksRequest.addressType() == AddressType.DOMAIN_NAME) {
-            outputStream.write(socksRequest.destAddress().length);
+        outputStream.write(cmdRequest.addressType().getValue()); // ATYP
+        if (cmdRequest.addressType() == AddressType.DOMAIN_NAME) {
+            outputStream.write(cmdRequest.destAddress().length);
         }
-        outputStream.write(socksRequest.destAddress()); // DST.ADDR
-        outputStream.write(socksRequest.destPort() >>> 8); // DST.PORT (first byte)
-        outputStream.write(socksRequest.destPort()); // DST.PORT (second byte)
+        outputStream.write(cmdRequest.destAddress()); // DST.ADDR
+        outputStream.write(cmdRequest.destPort() >>> 8); // DST.PORT (first byte)
+        outputStream.write(cmdRequest.destPort()); // DST.PORT (second byte)
     }
 
-    public static SocksResponse receiveConnResp(final InputStream inputStream) throws IOException {
+    public static CmdResponse receiveConnResp(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {
             if (version == -1) throw new SOCKS5ClientException("Connection closed");
@@ -82,6 +82,6 @@ public final class SocksService {
         }
         int bindPort = ((bindPortBytes[0] & 0xff) << 16) | ((bindPortBytes[1] & 0xff) << 8);
 
-        return new SocksResponse(reply, addressType, bindAddress, bindPort);
+        return new CmdResponse(reply, addressType, bindAddress, bindPort);
     }
 }

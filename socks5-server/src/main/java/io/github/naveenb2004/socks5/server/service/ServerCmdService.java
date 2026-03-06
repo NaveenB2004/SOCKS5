@@ -9,14 +9,16 @@ package io.github.naveenb2004.socks5.server.service;
 
 import io.github.naveenb2004.socks5.base.AddressType;
 import io.github.naveenb2004.socks5.base.Command;
-import io.github.naveenb2004.socks5.base.template.SocksRequest;
+import io.github.naveenb2004.socks5.base.template.CmdRequest;
+import io.github.naveenb2004.socks5.base.template.CmdResponse;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
-public final class ServerSocksService {
-    public static SocksRequest receiveConnReq(final InputStream inputStream) throws IOException {
+public final class ServerCmdService {
+    public static CmdRequest receiveCmdReq(final InputStream inputStream) throws IOException {
         int version = inputStream.read();
         if (version != 0x05) {
             if (version == -1) throw new SOCKS5ServerException("Connection closed");
@@ -66,6 +68,21 @@ public final class ServerSocksService {
         }
         int destPort = ((destPortBytes[0] & 0xff) << 16) | ((destPortBytes[1] & 0xff) << 8);
 
-        return new SocksRequest(command, addressType, destAddress, destPort);
+        return new CmdRequest(command, addressType, destAddress, destPort);
+    }
+
+    public static void sendCmdResp(final OutputStream clientOutputStream,
+                                   final CmdResponse cmdResponse) throws IOException {
+        byte[] respBuffer = new byte[6 + cmdResponse.bindAddress().length];
+        int i = 0;
+        respBuffer[i++] = 0x05;
+        respBuffer[i++] = (byte) cmdResponse.reply().getValue();
+        respBuffer[i++] = 0x00;
+        respBuffer[i++] = (byte) cmdResponse.addressType().getValue();
+        for (byte b : cmdResponse.bindAddress()) respBuffer[i++] = b;
+        respBuffer[i++] = (byte) (cmdResponse.bindPort() >>> 8);
+        respBuffer[i] = (byte) cmdResponse.bindPort();
+        clientOutputStream.write(respBuffer);
+        clientOutputStream.flush();
     }
 }

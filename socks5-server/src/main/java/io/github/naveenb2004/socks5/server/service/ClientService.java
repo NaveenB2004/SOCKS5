@@ -7,6 +7,7 @@
 
 package io.github.naveenb2004.socks5.server.service;
 
+import io.github.naveenb2004.socks5.base.Command;
 import io.github.naveenb2004.socks5.base.template.AuthRequest;
 import io.github.naveenb2004.socks5.base.template.AuthResponse;
 import io.github.naveenb2004.socks5.server.authentication.AbstractServerAuth;
@@ -46,6 +47,8 @@ public final class ClientService implements Runnable {
                 return;
             }
             authSelection.authenticate(clientInputStream, clientOutputStream);
+
+            Command commandSelection = commandSelect();
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
         } finally {
@@ -68,5 +71,9 @@ public final class ClientService implements Runnable {
         AuthResponse authResponse = new AuthResponse(matchedAuth == null ? 0xff : matchedAuth.getAuthMethodId());
         ServerAuthService.sendAuthSelectionResponse(clientOutputStream, authResponse);
         return matchedAuth;
+    }
+
+    private Command commandSelect() throws IOException {
+
     }
 }

@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public final class AuthService {
+public final class ClientAuthService {
     public static void sendAuthSelectionReq(final OutputStream outputStream,
                                             final AuthRequest authRequest) throws IOException {
         outputStream.write(0x05);
