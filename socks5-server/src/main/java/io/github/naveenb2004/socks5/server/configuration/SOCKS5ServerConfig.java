@@ -25,6 +25,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
     private final InetSocketAddress serverBindPoint;
     private final int serverBacklog;
     private final Map<Integer, AbstractServerAuth> serverAuths;
+    private final SOCKS5ServerRuleset serverRuleset;
 
     private SOCKS5ServerConfig(final int internalBufferSize,
                                final int connectionTimeout,
@@ -32,13 +33,15 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
                                final ThreadFactory concurrentThreadFactory,
                                final InetSocketAddress serverBindPoint,
                                final int serverBacklog,
-                               final Map<Integer, AbstractServerAuth> serverAuths) {
+                               final Map<Integer, AbstractServerAuth> serverAuths,
+                               final SOCKS5ServerRuleset serverRuleset) {
         super(internalBufferSize, connectionTimeout);
         this.concurrentConnections = concurrentConnections;
         this.concurrentThreadFactory = concurrentThreadFactory;
         this.serverBindPoint = serverBindPoint;
         this.serverBacklog = serverBacklog;
         this.serverAuths = serverAuths;
+        this.serverRuleset = serverRuleset;
     }
 
     public int getConcurrentConnections() {
@@ -61,6 +64,10 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         return Collections.unmodifiableMap(serverAuths);
     }
 
+    public SOCKS5ServerRuleset getServerRuleset() {
+        return serverRuleset;
+    }
+
     public static SOCKS5ServerConfigurationBuilder builder() {
         return new SOCKS5ServerConfigurationBuilder();
     }
@@ -73,6 +80,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         private InetSocketAddress serverBindPoint = new InetSocketAddress("0.0.0.0", 1080);
         private int serverBacklog = 10;
         private final Map<Integer, AbstractServerAuth> serverAuths = new HashMap<>(1, 1);
+        private SOCKS5ServerRuleset serverRuleset = null;
 
         private SOCKS5ServerConfigurationBuilder() {
             super();
@@ -108,6 +116,11 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
             return this;
         }
 
+        public SOCKS5ServerConfigurationBuilder serverRuleset(final SOCKS5ServerRuleset serverRuleset) {
+            this.serverRuleset = serverRuleset;
+            return this;
+        }
+
         @Override
         public SOCKS5ServerConfig build() {
             return new SOCKS5ServerConfig(
@@ -117,7 +130,8 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
                     concurrentThreadFactory,
                     serverBindPoint,
                     serverBacklog,
-                    Map.copyOf(serverAuths)
+                    Map.copyOf(serverAuths),
+                    serverRuleset
             );
         }
     }
