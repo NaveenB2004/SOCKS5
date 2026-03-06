@@ -30,12 +30,12 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
     public UsernamePasswordAuth addUser(final String username,
                                         final byte[] password) {
         if (username == null || password == null) throw new SOCKS5ServerException("Username/Password cannot be null");
-        if (username.length() > 255 || password.length > 255) {
+        byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
+        if (usernameBytes.length > 255 || password.length > 255) {
             throw new SOCKS5ServerException("Username/Password cannot be longer than 255 characters");
         }
-        byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
         if (users.containsKey(usernameBytes)) {
-            LOGGER.atWarn().log("User with username '{}' replaced with new password", username);
+            LOGGER.atWarn().log("User with username '{}' replaced with a new password", username);
         }
         users.put(usernameBytes, password);
         return this;
@@ -76,20 +76,22 @@ public final class UsernamePasswordAuth extends AbstractServerAuth {
         }
 
         byte[] targetPassword = users.get(username);
+        byte[] respBuffer = {0x01, 0x00};
         if (targetPassword == null) {
-            clientOutputStream.write(0x01);
-            clientOutputStream.write(0x01);
+            respBuffer[1] = 0x01;
+            clientOutputStream.write(respBuffer);
+            clientOutputStream.flush();
             throw new SOCKS5ServerException("User not found");
         }
 
         if (!Arrays.equals(password, targetPassword)) {
-            clientOutputStream.write(0x01);
-            clientOutputStream.write(0x02);
+            respBuffer[1] = 0x02;
+            clientOutputStream.write(respBuffer);
+            clientOutputStream.flush();
             throw new SOCKS5ServerException("User authentication failed (invalid password)");
         }
 
-        clientOutputStream.write(0x01);
-        clientOutputStream.write(0x00);
+        clientOutputStream.write(respBuffer);
         clientOutputStream.flush();
     }
 }
