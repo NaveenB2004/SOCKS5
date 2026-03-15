@@ -7,11 +7,15 @@
 
 package io.github.naveenb2004.socks5.server.service;
 
-import io.github.naveenb2004.socks5.base.Command;
+import io.github.naveenb2004.socks5.base.AddressType;
+import io.github.naveenb2004.socks5.base.Reply;
 import io.github.naveenb2004.socks5.base.template.AuthRequest;
 import io.github.naveenb2004.socks5.base.template.AuthResponse;
+import io.github.naveenb2004.socks5.base.template.CmdRequest;
+import io.github.naveenb2004.socks5.base.template.CmdResponse;
 import io.github.naveenb2004.socks5.server.authentication.AbstractServerAuth;
 import io.github.naveenb2004.socks5.server.configuration.SOCKS5ServerConfig;
+import io.github.naveenb2004.socks5.server.configuration.SOCKS5ServerRuleset;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +52,8 @@ public final class ClientService implements Runnable {
             }
             authSelection.authenticate(clientInputStream, clientOutputStream);
 
-            Command commandSelection = commandSelect();
+            CmdRequest commandSelection = commandSelect();
+
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
         } finally {
@@ -73,7 +78,66 @@ public final class ClientService implements Runnable {
         return matchedAuth;
     }
 
-    private Command commandSelect() throws IOException {
+    private CmdRequest commandSelect() throws IOException {
+        final CmdRequest cmdRequest = ServerCmdService.receiveCmdReq(clientInputStream);
+        final SOCKS5ServerRuleset ruleset = serverConfig.getServerRuleset();
 
+        if (ruleset.getEnforceCommands() != null) {
+            if (ruleset.getEnforceCommands() && !ruleset.getCommands().contains(cmdRequest.command())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Command not whitelisted by the ruleset");
+            }
+            if (!ruleset.getEnforceCommands() && ruleset.getCommands().contains(cmdRequest.command())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Command blacklisted by the ruleset");
+            }
+        }
+        if (ruleset.getEnforceAddressTypes() != null) {
+            if (ruleset.getEnforceAddressTypes() && !ruleset.getAddressTypes().contains(cmdRequest.addressType())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Address type not whitelisted by the ruleset");
+            }
+            if (!ruleset.getEnforceAddressTypes() && ruleset.getAddressTypes().contains(cmdRequest.addressType())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Address type blacklisted by the ruleset");
+            }
+        }
+        if (ruleset.getEnforceAddresses() != null) {
+            if (ruleset.getEnforceAddresses() && !ruleset.getAddresses().contains(cmdRequest.destAddress())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Address not whitelisted by the ruleset");
+            }
+            if (!ruleset.getEnforceAddresses() && ruleset.getAddresses().contains(cmdRequest.destAddress())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Address blacklisted by the ruleset");
+            }
+        }
+        if (ruleset.getEnforcePorts() != null) {
+            if (ruleset.getEnforcePorts() && !ruleset.getPorts().contains(cmdRequest.destPort())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Port not whitelisted by the ruleset");
+            }
+            if (!ruleset.getEnforcePorts() && ruleset.getPorts().contains(cmdRequest.destPort())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Port blacklisted by the ruleset");
+            }
+        }
+        if (ruleset.getEnforceDestinations() != null) {
+            if (ruleset.getEnforceDestinations() && (ruleset.getDestinations().get(cmdRequest.destAddress()) != cmdRequest.destPort())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Destination not whitelisted by the ruleset");
+            }
+            if (!ruleset.getEnforceDestinations() && (ruleset.getDestinations().get(cmdRequest.destAddress()) == cmdRequest.destPort())) {
+                sendCmdRuleFailResponse();
+                throw new SOCKS5ServerException("Destination blacklisted by the ruleset");
+            }
+        }
+
+        return cmdRequest;
+    }
+
+    private void sendCmdRuleFailResponse() throws IOException {
+        var cmdResponse = new CmdResponse(Reply.CONNECTION_NOT_ALLOWED_BY_RULESET, AddressType.DOMAIN_NAME, new byte[]{0x00}, 0);
+        ServerCmdService.sendCmdResp(clientOutputStream, cmdResponse);
     }
 }

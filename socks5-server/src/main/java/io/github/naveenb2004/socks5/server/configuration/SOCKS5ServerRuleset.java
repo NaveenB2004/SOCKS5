@@ -11,9 +11,9 @@ import io.github.naveenb2004.socks5.base.AddressType;
 import io.github.naveenb2004.socks5.base.Command;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public final class SOCKS5ServerRuleset {
@@ -22,22 +22,22 @@ public final class SOCKS5ServerRuleset {
     private final Boolean enforceAddressTypes;
     private final Set<AddressType> addressTypes;
     private final Boolean enforceAddresses;
-    private final Set<InetAddress> addresses;
+    private final Set<byte[]> addresses;
     private final Boolean enforcePorts;
     private final Set<Integer> ports;
     private final Boolean enforceDestinations;
-    private final Set<InetSocketAddress> destinations;
+    private final Map<byte[], Integer> destinations;
 
     private SOCKS5ServerRuleset(final Boolean enforceCommands,
                                 final Set<Command> commands,
                                 final Boolean enforceAddressTypes,
                                 final Set<AddressType> addressTypes,
                                 final Boolean enforceAddresses,
-                                final Set<InetAddress> addresses,
+                                final Set<byte[]> addresses,
                                 final Boolean enforcePorts,
                                 final Set<Integer> ports,
                                 final Boolean enforceDestinations,
-                                final Set<InetSocketAddress> destinations) {
+                                final Map<byte[], Integer> destinations) {
         this.enforceCommands = enforceCommands;
         this.commands = commands;
         this.enforceAddressTypes = enforceAddressTypes;
@@ -70,7 +70,7 @@ public final class SOCKS5ServerRuleset {
         return enforceAddresses;
     }
 
-    public Set<InetAddress> getAddresses() {
+    public Set<byte[]> getAddresses() {
         return addresses;
     }
 
@@ -86,7 +86,7 @@ public final class SOCKS5ServerRuleset {
         return enforceDestinations;
     }
 
-    public Set<InetSocketAddress> getDestinations() {
+    public Map<byte[], Integer> getDestinations() {
         return destinations;
     }
 
@@ -100,11 +100,11 @@ public final class SOCKS5ServerRuleset {
         private Boolean enforceAddressTypes;
         private final Set<AddressType> addressTypes = new HashSet<>(1, 1);
         private Boolean enforceAddresses;
-        private final Set<InetAddress> addresses = new HashSet<>(1, 1);
+        private final Set<byte[]> addresses = new HashSet<>(1, 1);
         private Boolean enforcePorts;
         private final Set<Integer> ports = new HashSet<>(1, 1);
         private Boolean enforceDestinations;
-        private final Set<InetSocketAddress> destinations = new HashSet<>(1, 1);
+        private final Map<byte[], Integer> destinations = new HashMap<>(1, 1);
 
         private SOCKS5ServerRulesetBuilder() {
         }
@@ -136,7 +136,7 @@ public final class SOCKS5ServerRuleset {
             return this;
         }
 
-        public SOCKS5ServerRulesetBuilder address(final InetAddress address) {
+        public SOCKS5ServerRulesetBuilder address(final byte[] address) {
             if (address == null) throw new SOCKS5ServerException("Address cannot be null");
             addresses.add(address);
             return this;
@@ -158,9 +158,11 @@ public final class SOCKS5ServerRuleset {
             return this;
         }
 
-        public SOCKS5ServerRulesetBuilder destination(final InetSocketAddress destination) {
-            if (destination == null) throw new SOCKS5ServerException("Destination cannot be null");
-            destinations.add(destination);
+        public SOCKS5ServerRulesetBuilder destination(final byte[] address,
+                                                      final int port) {
+            if (address == null) throw new SOCKS5ServerException("Address cannot be null");
+            if (port < 0 || port > 65535) throw new SOCKS5ServerException("Invalid port: " + port);
+            destinations.put(address, port);
             return this;
         }
 
@@ -191,7 +193,7 @@ public final class SOCKS5ServerRuleset {
                     enforcePorts,
                     enforcePorts != null ? Set.copyOf(ports) : null,
                     enforceDestinations,
-                    enforceDestinations != null ? Set.copyOf(destinations) : null
+                    enforceDestinations != null ? Map.copyOf(destinations) : null
             );
         }
     }
