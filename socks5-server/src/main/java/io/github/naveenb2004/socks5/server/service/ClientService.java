@@ -17,6 +17,10 @@ import io.github.naveenb2004.socks5.server.authentication.AbstractServerAuth;
 import io.github.naveenb2004.socks5.server.configuration.SOCKS5ServerConfig;
 import io.github.naveenb2004.socks5.server.configuration.SOCKS5ServerRuleset;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.service.cmd.Bind;
+import io.github.naveenb2004.socks5.server.service.cmd.CmdHandler;
+import io.github.naveenb2004.socks5.server.service.cmd.Connect;
+import io.github.naveenb2004.socks5.server.service.cmd.UdpAssociate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,20 +50,23 @@ public final class ClientService implements Runnable {
     public void run() {
         try {
             AbstractServerAuth authSelection = authSelect();
-            if (authSelection == null) {
-                LOGGER.atDebug().log("No acceptable authentication methods from client; disconnecting...");
-                return;
-            }
             authSelection.authenticate(clientInputStream, clientOutputStream);
 
             CmdRequest commandSelection = commandSelect();
-
+            CmdHandler cmdHandler = switch (commandSelection.command()) {
+                case CONNECT -> new Connect(clientSocket, commandSelection, serverConfig);
+                case BIND -> new Bind(clientSocket, commandSelection, serverConfig);
+                case UDP_ASSOCIATE -> new UdpAssociate(clientSocket, commandSelection, serverConfig);
+            };
+            cmdHandler.handle();
         } catch (IOException e) {
             throw new SOCKS5ServerException(e);
         } finally {
             try {
                 if (!clientSocket.isClosed()) clientSocket.close();
-            } catch (IOException _) {}
+            } catch (IOException e) {
+                LOGGER.atError().log(e.getMessage());
+            }
         }
     }
 
@@ -75,6 +82,7 @@ public final class ClientService implements Runnable {
 
         AuthResponse authResponse = new AuthResponse(matchedAuth == null ? 0xff : matchedAuth.getAuthMethodId());
         ServerAuthService.sendAuthSelectionResponse(clientOutputStream, authResponse);
+        if (matchedAuth == null) throw new SOCKS5ServerException("No matching auth method found");
         return matchedAuth;
     }
 
@@ -82,6 +90,7 @@ public final class ClientService implements Runnable {
         final CmdRequest cmdRequest = ServerCmdService.receiveCmdReq(clientInputStream);
         final SOCKS5ServerRuleset ruleset = serverConfig.getServerRuleset();
 
+        if (ruleset == null) return cmdRequest;
         if (ruleset.getEnforceCommands() != null) {
             if (ruleset.getEnforceCommands() && !ruleset.getCommands().contains(cmdRequest.command())) {
                 sendCmdRuleFailResponse();
