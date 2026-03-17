@@ -66,7 +66,7 @@ public final class ServerCmdService {
             if (destPortLength == -1) throw new SOCKS5ServerException("Connection closed");
             throw new SOCKS5ServerException("Error while reading Destination Port from client");
         }
-        int destPort = ((destPortBytes[0] & 0xff) << 16) | ((destPortBytes[1] & 0xff) << 8);
+        int destPort = ((destPortBytes[0] & 0xff) << 8) | (destPortBytes[1] & 0xff);
 
         return new CmdRequest(command, addressType, destAddress, destPort);
     }

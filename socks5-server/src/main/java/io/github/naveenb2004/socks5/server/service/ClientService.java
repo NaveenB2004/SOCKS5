@@ -59,7 +59,7 @@ public final class ClientService implements Runnable {
                 case UDP_ASSOCIATE -> new UdpAssociate(clientSocket, commandSelection, serverConfig);
             };
             cmdHandler.handle();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new SOCKS5ServerException(e);
         } finally {
             try {

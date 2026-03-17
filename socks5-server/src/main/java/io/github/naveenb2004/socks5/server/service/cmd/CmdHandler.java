@@ -22,7 +22,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public interface CmdHandler {
-    void handle() throws IOException;
+    void handle() throws IOException, InterruptedException;
 
     static InetSocketAddress getDestination(final CmdRequest clientRequest,
                                             final OutputStream clientOutputStream) throws IOException {
