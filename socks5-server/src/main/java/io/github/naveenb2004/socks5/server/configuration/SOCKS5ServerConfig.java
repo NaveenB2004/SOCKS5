@@ -76,7 +76,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         private static final Logger LOGGER = LoggerFactory.getLogger(SOCKS5ServerConfigurationBuilder.class);
 
         private int concurrentConnections = 100;
-        private ThreadFactory concurrentThreadFactory = Thread.ofPlatform().factory();
+        private ThreadFactory concurrentThreadFactory = Thread.ofVirtual().factory();
         private InetSocketAddress serverBindPoint = new InetSocketAddress("0.0.0.0", 1080);
         private int serverBacklog = 10;
         private final Map<Integer, AbstractServerAuth> serverAuths = new HashMap<>(1, 1);

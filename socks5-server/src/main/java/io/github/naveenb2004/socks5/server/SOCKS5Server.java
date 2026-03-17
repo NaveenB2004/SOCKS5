@@ -33,23 +33,23 @@ public final class SOCKS5Server {
         if (initialized) throw new SOCKS5ServerException("Server already started");
         this.clientExecutor = Executors.newFixedThreadPool(config.getConcurrentConnections(), config.getConcurrentThreadFactory());
 
-        try (ServerSocket serverSocket = new ServerSocket()) {
-            serverSocket.bind(config.getServerBindPoint(), config.getServerBacklog());
-            serverSocket.setReceiveBufferSize(config.getInternalBufferSize());
-            serverSocket.setSoTimeout(config.getConnectionTimeout());
-            this.serverSocket = serverSocket;
-            this.serverThread = Thread.ofPlatform().start(() -> {
-                while (!serverSocket.isClosed()) {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        ClientService clientService = new ClientService(clientSocket, config);
-                        clientExecutor.execute(clientService);
-                    } catch (IOException e) {
-                        throw new SOCKS5ServerException(e);
-                    }
+        ServerSocket serverSocket = new ServerSocket();
+        serverSocket.bind(config.getServerBindPoint(), config.getServerBacklog());
+        serverSocket.setReceiveBufferSize(config.getInternalBufferSize());
+        serverSocket.setSoTimeout(config.getConnectionTimeout());
+        this.serverSocket = serverSocket;
+        this.serverThread = Thread.ofPlatform().start(() -> {
+            while (!serverSocket.isClosed()) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    clientSocket.setTcpNoDelay(true);
+                    ClientService clientService = new ClientService(clientSocket, config);
+                    clientExecutor.execute(clientService);
+                } catch (IOException e) {
+                    throw new SOCKS5ServerException(e);
                 }
-            });
-        }
+            }
+        });
 
         initialized = true;
     }

@@ -46,6 +46,7 @@ public interface CmdHandler {
     static Socket buildSocket(final InetSocketAddress destination) throws IOException {
         final var socket = new Socket();
         socket.connect(destination);
+        socket.setTcpNoDelay(true);
         return socket;
     }
 }

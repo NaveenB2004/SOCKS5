@@ -7,15 +7,20 @@
 
 package io.github.naveenb2004.socks5.server.service.cmd;
 
+import io.github.naveenb2004.socks5.base.AddressType;
+import io.github.naveenb2004.socks5.base.Reply;
 import io.github.naveenb2004.socks5.base.template.CmdRequest;
+import io.github.naveenb2004.socks5.base.template.CmdResponse;
 import io.github.naveenb2004.socks5.server.configuration.SOCKS5ServerConfig;
 import io.github.naveenb2004.socks5.server.exception.SOCKS5ServerException;
+import io.github.naveenb2004.socks5.server.service.ServerCmdService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 
@@ -37,8 +42,9 @@ public final class Connect implements CmdHandler {
     @Override
     public void handle() throws IOException, InterruptedException {
         final var destination = CmdHandler.getDestination(clientRequest, clientSocket.getOutputStream());
-        System.out.println("Sending request to destination: " + destination);
+        LOGGER.atDebug().log("Sending request to '{}'", destination);
         try (final var destSocket = CmdHandler.buildSocket(destination)) {
+            sendResp(destSocket);
             final var countDownLatch = new CountDownLatch(2);
             serverConfig.getConcurrentThreadFactory().newThread(() -> {
                 try {
@@ -60,6 +66,13 @@ public final class Connect implements CmdHandler {
             }).start();
             countDownLatch.await();
         }
+    }
+
+    private void sendResp(final Socket destSocket) throws IOException {
+        final var localAddr = clientSocket.getLocalAddress();
+        final var addrType = localAddr instanceof Inet4Address ? AddressType.IPv4 : AddressType.IPv6;
+        final var cmdResp = new CmdResponse(Reply.SUCCEEDED, addrType, localAddr.getAddress(), destSocket.getLocalPort());
+        ServerCmdService.sendCmdResp(clientSocket.getOutputStream(), cmdResp);
     }
 
     private void wireIO(final InputStream inputStream,
