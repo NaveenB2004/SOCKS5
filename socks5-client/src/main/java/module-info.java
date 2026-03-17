@@ -1,4 +1,4 @@
-module io.github.naveenb2004.socks5.client {
+module net.naveenb2004.socks5.client {
     requires org.slf4j;
-    requires transitive io.github.naveenb2004.socks5.base;
+    requires transitive net.naveenb2004.socks5.base;
 }
