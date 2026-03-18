@@ -29,7 +29,7 @@ public abstract class AbstractSOCKS5Configuration {
 
     public static abstract class SOCKS5ConfigurationBuilder {
         protected int internalBufferSize = 10_240; // 10KB
-        protected int connectionTimeout = 0;
+        protected int connectionTimeout = 30_000; // 30sec
 
         protected SOCKS5ConfigurationBuilder() {
         }

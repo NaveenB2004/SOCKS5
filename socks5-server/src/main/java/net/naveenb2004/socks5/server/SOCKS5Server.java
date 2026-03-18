@@ -14,6 +14,7 @@ import net.naveenb2004.socks5.server.service.ClientService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,29 +30,35 @@ public final class SOCKS5Server {
         this.config = config;
     }
 
-    public synchronized void start() throws IOException {
+    public synchronized void start() throws InterruptedException {
         if (initialized) throw new SOCKS5ServerException("Server already started");
         this.clientExecutor = Executors.newFixedThreadPool(config.getConcurrentConnections(), config.getConcurrentThreadFactory());
+        final var synchronizeGate = new CountDownLatch(1);
 
-        ServerSocket serverSocket = new ServerSocket();
-        serverSocket.bind(config.getServerBindPoint(), config.getServerBacklog());
-        serverSocket.setReceiveBufferSize(config.getInternalBufferSize());
-        serverSocket.setSoTimeout(config.getConnectionTimeout());
-        this.serverSocket = serverSocket;
         this.serverThread = Thread.ofPlatform().start(() -> {
-            while (!serverSocket.isClosed()) {
-                try {
-                    Socket clientSocket = serverSocket.accept();
-                    clientSocket.setTcpNoDelay(true);
-                    ClientService clientService = new ClientService(clientSocket, config);
-                    clientExecutor.execute(clientService);
-                } catch (IOException e) {
-                    throw new SOCKS5ServerException(e);
+            try (var serverSocket = new ServerSocket()) {
+                serverSocket.bind(config.getServerBindPoint(), config.getServerBacklog());
+                serverSocket.setReceiveBufferSize(config.getInternalBufferSize());
+                serverSocket.setSoTimeout(config.getConnectionTimeout());
+                this.serverSocket = serverSocket;
+                synchronizeGate.countDown();
+
+                while (!serverSocket.isClosed()) {
+                    try (Socket clientSocket = serverSocket.accept()) {
+                        clientSocket.setTcpNoDelay(true);
+                        ClientService clientService = new ClientService(clientSocket, config);
+                        clientExecutor.execute(clientService);
+                    } catch (IOException e) {
+                        throw new SOCKS5ServerException(e);
+                    }
                 }
+            } catch (IOException e) {
+                throw new SOCKS5ServerException(e);
             }
         });
 
         initialized = true;
+        synchronizeGate.await();
     }
 
     public synchronized void stop() throws IOException {
