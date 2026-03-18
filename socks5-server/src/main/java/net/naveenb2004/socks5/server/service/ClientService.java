@@ -21,6 +21,8 @@ import net.naveenb2004.socks5.server.service.cmd.Bind;
 import net.naveenb2004.socks5.server.service.cmd.CmdHandler;
 import net.naveenb2004.socks5.server.service.cmd.Connect;
 import net.naveenb2004.socks5.server.service.cmd.UdpAssociate;
+import net.naveenb2004.socks5.server.service.core.ServerAuthService;
+import net.naveenb2004.socks5.server.service.core.ServerCmdService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

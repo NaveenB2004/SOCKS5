@@ -26,6 +26,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
     private final int serverBacklog;
     private final Map<Integer, AbstractServerAuth> serverAuths;
     private final SOCKS5ServerRuleset serverRuleset;
+    private final int maxBindReqCycles;
 
     private SOCKS5ServerConfig(final int internalBufferSize,
                                final int connectionTimeout,
@@ -34,7 +35,8 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
                                final InetSocketAddress serverBindPoint,
                                final int serverBacklog,
                                final Map<Integer, AbstractServerAuth> serverAuths,
-                               final SOCKS5ServerRuleset serverRuleset) {
+                               final SOCKS5ServerRuleset serverRuleset,
+                               final int maxBindReqCycles) {
         super(internalBufferSize, connectionTimeout);
         this.concurrentConnections = concurrentConnections;
         this.concurrentThreadFactory = concurrentThreadFactory;
@@ -42,6 +44,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         this.serverBacklog = serverBacklog;
         this.serverAuths = serverAuths;
         this.serverRuleset = serverRuleset;
+        this.maxBindReqCycles = maxBindReqCycles;
     }
 
     public int getConcurrentConnections() {
@@ -68,6 +71,10 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         return serverRuleset;
     }
 
+    public int getMaxBindReqCycles() {
+        return maxBindReqCycles;
+    }
+
     public static SOCKS5ServerConfigurationBuilder builder() {
         return new SOCKS5ServerConfigurationBuilder();
     }
@@ -81,6 +88,7 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
         private int serverBacklog = 10;
         private final Map<Integer, AbstractServerAuth> serverAuths = new HashMap<>(1, 1);
         private SOCKS5ServerRuleset serverRuleset = null;
+        private int maxBindReqCycles = 3;
 
         private SOCKS5ServerConfigurationBuilder() {
             super();
@@ -121,6 +129,12 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
             return this;
         }
 
+        public SOCKS5ServerConfigurationBuilder maxBindReqCycles(final int maxBindReqCycles) {
+            if (maxBindReqCycles < 1) throw new SOCKS5ServerException("Config error: maxBindReqCycles must be greater than 0.");
+            this.maxBindReqCycles = maxBindReqCycles;
+            return this;
+        }
+
         @Override
         public SOCKS5ServerConfig build() {
             return new SOCKS5ServerConfig(
@@ -131,7 +145,8 @@ public final class SOCKS5ServerConfig extends AbstractSOCKS5Configuration {
                     serverBindPoint,
                     serverBacklog,
                     Map.copyOf(serverAuths),
-                    serverRuleset
+                    serverRuleset,
+                    maxBindReqCycles
             );
         }
     }

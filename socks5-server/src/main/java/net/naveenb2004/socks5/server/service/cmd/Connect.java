@@ -13,7 +13,7 @@ import net.naveenb2004.socks5.base.template.CmdRequest;
 import net.naveenb2004.socks5.base.template.CmdResponse;
 import net.naveenb2004.socks5.server.configuration.SOCKS5ServerConfig;
 import net.naveenb2004.socks5.server.exception.SOCKS5ServerException;
-import net.naveenb2004.socks5.server.service.ServerCmdService;
+import net.naveenb2004.socks5.server.service.core.ServerCmdService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

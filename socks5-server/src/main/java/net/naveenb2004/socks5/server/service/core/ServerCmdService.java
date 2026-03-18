@@ -5,7 +5,7 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-package net.naveenb2004.socks5.server.service;
+package net.naveenb2004.socks5.server.service.core;
 
 import net.naveenb2004.socks5.base.AddressType;
 import net.naveenb2004.socks5.base.Command;
