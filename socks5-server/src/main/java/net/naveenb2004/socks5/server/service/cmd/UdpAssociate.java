@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-public final class UdpAssociate implements CmdHandler {
+public final class UdpAssociate extends CmdHandler {
     private final InputStream clientInputStream;
     private final OutputStream clientOutputStream;
     private final CmdRequest clientRequest;

@@ -18,11 +18,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 
-public interface CmdHandler {
-    void handle() throws IOException, InterruptedException;
+public abstract sealed class CmdHandler permits Connect, Bind, UdpAssociate {
+    public abstract void handle() throws IOException, InterruptedException;
 
     static InetSocketAddress getDestination(final CmdRequest clientRequest,
                                             final OutputStream clientOutputStream) throws IOException {
@@ -41,12 +40,5 @@ public interface CmdHandler {
             throw new SOCKS5ServerException("Unable to connect to the destination.", uhe);
         }
         return destination;
-    }
-
-    static Socket buildSocket(final InetSocketAddress destination) throws IOException {
-        final var socket = new Socket();
-        socket.connect(destination);
-        socket.setTcpNoDelay(true);
-        return socket;
     }
 }

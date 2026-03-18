@@ -21,10 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 
-public final class Connect implements CmdHandler {
+public final class Connect extends CmdHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Connect.class);
 
     private final Socket clientSocket;
@@ -42,9 +43,9 @@ public final class Connect implements CmdHandler {
     @Override
     public void handle() throws IOException, InterruptedException {
         final var destination = CmdHandler.getDestination(clientRequest, clientSocket.getOutputStream());
-        LOGGER.atDebug().log("Sending request to '{}'", destination);
-        try (final var destSocket = CmdHandler.buildSocket(destination)) {
-            sendResp(destSocket);
+        LOGGER.atDebug().log("Sending request to: {}", destination);
+        try (final var destSocket = buildSocket(destination)) {
+            sendSuccessResp(destSocket);
             final var countDownLatch = new CountDownLatch(2);
             serverConfig.getConcurrentThreadFactory().newThread(() -> {
                 try {
@@ -68,7 +69,14 @@ public final class Connect implements CmdHandler {
         }
     }
 
-    private void sendResp(final Socket destSocket) throws IOException {
+    private Socket buildSocket(final InetSocketAddress destination) throws IOException {
+        final var socket = new Socket();
+        socket.connect(destination);
+        socket.setTcpNoDelay(true);
+        return socket;
+    }
+
+    private void sendSuccessResp(final Socket destSocket) throws IOException {
         final var localAddr = clientSocket.getLocalAddress();
         final var addrType = localAddr instanceof Inet4Address ? AddressType.IPv4 : AddressType.IPv6;
         final var cmdResp = new CmdResponse(Reply.SUCCEEDED, addrType, localAddr.getAddress(), destSocket.getLocalPort());
